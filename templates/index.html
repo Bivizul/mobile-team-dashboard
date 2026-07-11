@@ -16,10 +16,51 @@ href="/static/style.css">
 
 <body>
 
+<div class="toolbar">
+    <h1>
+    Jira Team Dashboard for Mobile
+    </h1>
 
-<h1>
-Jira Team Dashboard for Mobile
-</h1>
+    <form class="filters" method="get">
+        <label>
+            <span>Epic</span>
+            <input
+                type="text"
+                name="epic_link"
+                list="epic-options"
+                value="{{ selected_epic }}"
+                autocomplete="off"
+                placeholder="Type to search"
+            >
+            <datalist id="epic-options">
+                <option value="">All epics</option>
+                {% for option in epic_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+            </datalist>
+        </label>
+
+        <label>
+            <span>Fix Version</span>
+            <input
+                type="text"
+                name="fix_version"
+                list="fix-version-options"
+                value="{{ selected_fix_version }}"
+                autocomplete="off"
+                placeholder="Type to search"
+            >
+            <datalist id="fix-version-options">
+                <option value="">All versions</option>
+                {% for option in fix_version_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+            </datalist>
+        </label>
+
+        <button type="submit">Apply</button>
+    </form>
+</div>
 
 
 <div class="cards">

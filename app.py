@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 
 from jira_client import JiraClient
 from analytics import Analytics
@@ -17,13 +17,17 @@ def index():
 
     jira = JiraClient()
 
-    issues = jira.get_filter_issues()
+    epic_link = request.args.get("epic_link", "").strip()
+    fix_version = request.args.get("fix_version", "").strip()
 
+    issues = jira.get_filter_issues(
+        epic_link=epic_link,
+        fix_version=fix_version,
+    )
 
     analytics = Analytics(
         issues
     )
-
 
     return render_template(
 
@@ -45,7 +49,19 @@ def index():
             analytics.totals(),
 
         issues=
-            analytics.task_list()
+            analytics.task_list(),
+
+        epic_options=
+            jira.get_epic_options(),
+
+        fix_version_options=
+            jira.get_fix_version_options(),
+
+        selected_epic=
+            epic_link,
+
+        selected_fix_version=
+            fix_version,
     )
 
 

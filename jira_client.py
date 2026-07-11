@@ -25,7 +25,7 @@ class JiraClient:
         self.base_url = config.JIRA_URL
 
 
-    def get_filter_issues(self):
+    def get_filter_jql(self):
 
         url = (
             f"{self.base_url}"
@@ -33,21 +33,42 @@ class JiraClient:
             f"{config.JIRA_FILTER_ID}"
         )
 
-
         response = self.session.get(url)
-
         response.raise_for_status()
 
+        return response.json()["jql"]
 
-        jql = response.json()["jql"]
 
+    def get_filter_issues(self, epic_link=None, fix_version=None):
+
+        jql = self.get_filter_jql()
+
+        jql = self.apply_filters(
+            jql,
+            epic_link=epic_link,
+            fix_version=fix_version,
+        )
 
         print("Using JQL:")
         print(jql)
 
-
         return self.search(jql)
 
+
+    def apply_filters(self, jql, epic_link=None, fix_version=None):
+
+        conditions = []
+
+        if epic_link:
+            conditions.append(f'"Epic Link" = "{epic_link}"')
+
+        if fix_version:
+            conditions.append(f'fixVersion = "{fix_version}"')
+
+        if not conditions:
+            return jql
+
+        return f"({jql}) AND {' AND '.join(conditions)}"
 
 
     def search(self, jql):
@@ -98,6 +119,59 @@ class JiraClient:
             for issue in data["issues"]
         ]
 
+
+    def get_epic_options(self):
+
+        response = self.session.get(
+            f"{self.base_url}/rest/api/2/search",
+            params={
+                "jql": "issuetype = Epic",
+                "maxResults": 100,
+                "fields": ["summary", "key"],
+            },
+        )
+        response.raise_for_status()
+
+        data = response.json()
+
+        options = [
+            {
+                "value": issue["key"],
+                "label": f"{issue['fields']['summary']} ({issue['key']})",
+            }
+            for issue in data.get("issues", [])
+        ]
+
+        return sorted(options, key=lambda item: item["label"].lower())
+
+
+    def get_fix_version_options(self):
+
+        jql = self.get_filter_jql()
+
+        response = self.session.get(
+            f"{self.base_url}/rest/api/2/search",
+            params={
+                "jql": jql,
+                "maxResults": 100,
+                "fields": ["fixVersions"],
+            },
+        )
+        response.raise_for_status()
+
+        data = response.json()
+
+        versions = []
+        for issue in data.get("issues", []):
+            for version in issue.get("fields", {}).get("fixVersions", []):
+                name = version.get("name")
+                if name and name not in versions:
+                    versions.append(name)
+
+        return sorted(
+            [{"value": version, "label": version} for version in versions],
+            key=lambda item: item["label"].lower(),
+        )
 
 
     def map_issue(self, raw):
