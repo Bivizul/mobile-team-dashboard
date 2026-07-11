@@ -68,6 +68,26 @@ th {
     background: #333;
 }
 
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+th.sortable::after {
+    content: ' ↕';
+    color: #aaa;
+    font-size: 0.85em;
+}
+
+th.sorted-asc::after {
+    content: ' ↑';
+    color: #fff;
+}
+
+th.sorted-desc::after {
+    content: ' ↓';
+    color: #fff;
+}
 
 tr:hover {
     background: rgba(255,255,255,0.05);

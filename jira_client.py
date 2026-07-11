@@ -8,6 +8,8 @@ class JiraClient:
 
     def __init__(self):
 
+        config.reload()
+
         self.session = requests.Session()
 
         self.session.headers.update(

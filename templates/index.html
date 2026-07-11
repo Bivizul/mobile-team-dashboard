@@ -74,56 +74,60 @@ Developers
 
 <table>
 
+<thead>
 <tr>
 
-<th>
+<th class="sortable" data-column="developer">
 Developer
 </th>
 
-<th>
+<th class="sortable" data-column="tasks">
 Tasks
 </th>
 
-<th>
+<th class="sortable" data-column="estimate">
 Estimate
 </th>
 
-<th>
+<th class="sortable" data-column="logged">
 Logged
 </th>
 
-<th>
+<th class="sortable" data-column="remaining">
 Remaining
 </th>
 
-<th>
+<th class="sortable" data-column="efficiency">
 Efficiency
 </th>
 
 </tr>
+</thead>
 
-
+<tbody>
 {% for name,data in developers.items() %}
 
 <tr>
 
-<td>{{name}}</td>
+<td data-column="developer" data-sort-value="{{ name }}">{{name}}</td>
 
-<td>{{data.tasks}}</td>
+<td data-column="tasks" data-sort-value="{{ data.tasks }}">{{data.tasks}}</td>
 
-<td>{{data.estimate | hours}} h</td>
+<td data-column="estimate" data-sort-value="{{ data.estimate }}">{{data.estimate | hours}} h</td>
 
-<td>{{data.logged | hours}} h</td>
+<td data-column="logged" data-sort-value="{{ data.logged }}">{{data.logged | hours}} h</td>
 
-<td>{{data.remaining | hours}} h</td>
+<td data-column="remaining" data-sort-value="{{ data.remaining }}">{{data.remaining | hours}} h</td>
 
-<td>{{data.efficiency}} %</td>
+<td data-column="efficiency" data-sort-value="{{ data.efficiency }}">{{data.efficiency}} %</td>
 
 
 </tr>
 
 {% endfor %}
+</tbody>
 
+<tfoot>
 <tr class="total-row">
 
 <td>
@@ -167,6 +171,7 @@ TOTAL
 </td>
 
 </tr>
+</tfoot>
 
 
 </table>
@@ -180,56 +185,60 @@ Developers with logged time
 
 <table>
 
+<thead>
 <tr>
 
-<th>
+<th class="sortable" data-column="developer">
 Developer
 </th>
 
-<th>
+<th class="sortable" data-column="tasks">
 Tasks
 </th>
 
-<th>
+<th class="sortable" data-column="estimate">
 Estimate
 </th>
 
-<th>
+<th class="sortable" data-column="logged">
 Logged
 </th>
 
-<th>
+<th class="sortable" data-column="remaining">
 Remaining
 </th>
 
-<th>
+<th class="sortable" data-column="efficiency">
 Efficiency
 </th>
 
 </tr>
+</thead>
 
-
+<tbody>
 {% for name,data in developers_with_logged_time.items() %}
 
 <tr>
 
-<td>{{name}}</td>
+<td data-column="developer" data-sort-value="{{ name }}">{{name}}</td>
 
-<td>{{data.tasks}}</td>
+<td data-column="tasks" data-sort-value="{{ data.tasks }}">{{data.tasks}}</td>
 
-<td>{{data.estimate | hours}} h</td>
+<td data-column="estimate" data-sort-value="{{ data.estimate }}">{{data.estimate | hours}} h</td>
 
-<td>{{data.logged | hours}} h</td>
+<td data-column="logged" data-sort-value="{{ data.logged }}">{{data.logged | hours}} h</td>
 
-<td>{{data.remaining | hours}} h</td>
+<td data-column="remaining" data-sort-value="{{ data.remaining }}">{{data.remaining | hours}} h</td>
 
-<td>{{data.efficiency}} %</td>
+<td data-column="efficiency" data-sort-value="{{ data.efficiency }}">{{data.efficiency}} %</td>
 
 
 </tr>
 
 {% endfor %}
+</tbody>
 
+<tfoot>
 <tr class="total-row">
 
 <td>
@@ -273,6 +282,7 @@ TOTAL
 </td>
 
 </tr>
+</tfoot>
 
 
 </table>
@@ -280,68 +290,146 @@ TOTAL
 
 
 <h2>
-Tasks
+Overdue tasks
 </h2>
 
 
 <table>
 
+<thead>
 <tr>
 
-<th>
+<th class="sortable" data-column="key">
 Key
 </th>
 
-<th>
+<th class="sortable" data-column="summary">
 Summary
 </th>
 
-<th>
+<th class="sortable" data-column="assignee">
 Assignee
 </th>
 
-<th>
+<th class="sortable" data-column="estimate">
 Estimate
 </th>
 
-<th>
+<th class="sortable" data-column="logged">
 Logged
 </th>
 
+<th class="sortable" data-column="efficiency">
+Efficiency
+</th>
+
 </tr>
+</thead>
 
-
+<tbody>
 {% for issue in issues %}
 
 <tr>
 
-<td>
+<td data-column="key" data-sort-value="{{ issue.key }}">
 {{issue.key}}
 </td>
 
-<td>
+<td data-column="summary" data-sort-value="{{ issue.summary }}">
 {{issue.summary}}
 </td>
 
-<td>
+<td data-column="assignee" data-sort-value="{{ issue.assignee }}">
 {{issue.assignee}}
 </td>
 
-<td>
+<td data-column="estimate" data-sort-value="{{ issue.estimate }}">
 {{issue.estimate | hours}} h
 </td>
 
-<td>
+<td data-column="logged" data-sort-value="{{ issue.logged }}">
 {{issue.logged | hours}} h
+</td>
+
+<td data-column="efficiency" data-sort-value="{{ ((issue.estimate / issue.logged * 100) if issue.logged else 0) }}">
+{{ ((issue.estimate / issue.logged * 100) if issue.logged else 0) | round(1) }} %
 </td>
 
 </tr>
 
 
 {% endfor %}
+</tbody>
 
 </table>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('table').forEach((table) => {
+        const headers = Array.from(table.querySelectorAll('th.sortable'));
+
+        headers.forEach((header) => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.column;
+                const currentDirection = header.dataset.sortDirection;
+                const nextDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+
+                headers.forEach((item) => {
+                    delete item.dataset.sortDirection;
+                    item.classList.remove('sorted-asc', 'sorted-desc');
+                });
+
+                header.dataset.sortDirection = nextDirection;
+                header.classList.add(nextDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+                sortTable(table, column, nextDirection);
+            });
+        });
+    });
+
+    function sortTable(table, column, direction) {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) {
+            return;
+        }
+
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const sortedRows = rows.slice().sort((leftRow, rightRow) => {
+            const leftValue = getCellValue(leftRow, column);
+            const rightValue = getCellValue(rightRow, column);
+            const leftNumber = Number(leftValue);
+            const rightNumber = Number(rightValue);
+            const isNumeric = !Number.isNaN(leftNumber) && !Number.isNaN(rightNumber) && leftValue !== '' && rightValue !== '';
+
+            if (isNumeric) {
+                return (leftNumber - rightNumber) * (direction === 'asc' ? 1 : -1);
+            }
+
+            const leftText = String(leftValue || '').toLowerCase();
+            const rightText = String(rightValue || '').toLowerCase();
+
+            if (leftText < rightText) {
+                return direction === 'asc' ? -1 : 1;
+            }
+            if (leftText > rightText) {
+                return direction === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        sortedRows.forEach((row) => tbody.appendChild(row));
+    }
+
+    function getCellValue(row, column) {
+        const cell = Array.from(row.children).find((item) => item.dataset.column === column);
+        if (!cell) {
+            return '';
+        }
+
+        return cell.dataset.sortValue ?? cell.textContent.trim();
+    }
+});
+</script>
 
 </body>
 
