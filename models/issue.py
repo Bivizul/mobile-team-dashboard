@@ -14,5 +14,4 @@ class Issue:
     estimate: int
     logged: int
     remaining: int
-
-    from dataclasses import dataclass
+    jira_url: str = ""

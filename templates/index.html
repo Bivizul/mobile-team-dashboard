@@ -113,7 +113,7 @@ Developers
 </h2>
 
 
-<table>
+<table data-default-sort-column="developer">
 
 <thead>
 <tr>
@@ -224,7 +224,7 @@ Developers with logged time
 </h2>
 
 
-<table>
+<table data-default-sort-column="developer">
 
 <thead>
 <tr>
@@ -331,11 +331,11 @@ TOTAL
 
 
 <h2>
-Overdue tasks
+Overdue tasks ({{ issues|length }}/{{ summary.tasks }})
 </h2>
 
 
-<table>
+<table class="table-overdue-tasks" data-default-sort-column="assignee">
 
 <thead>
 <tr>
@@ -344,12 +344,12 @@ Overdue tasks
 Key
 </th>
 
-<th class="sortable" data-column="summary">
-Summary
-</th>
-
 <th class="sortable" data-column="assignee">
 Assignee
+</th>
+
+<th class="sortable" data-column="summary">
+Summary
 </th>
 
 <th class="sortable" data-column="estimate">
@@ -373,15 +373,15 @@ Efficiency
 <tr>
 
 <td data-column="key" data-sort-value="{{ issue.key }}">
-{{issue.key}}
-</td>
-
-<td data-column="summary" data-sort-value="{{ issue.summary }}">
-{{issue.summary}}
+<a href="{{ issue.jira_url }}" target="_blank" rel="noopener noreferrer">{{issue.key}}</a>
 </td>
 
 <td data-column="assignee" data-sort-value="{{ issue.assignee }}">
 {{issue.assignee}}
+</td>
+
+<td data-column="summary" data-sort-value="{{ issue.summary }}">
+{{issue.summary}}
 </td>
 
 <td data-column="estimate" data-sort-value="{{ issue.estimate }}">
@@ -408,6 +408,16 @@ Efficiency
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('table').forEach((table) => {
         const headers = Array.from(table.querySelectorAll('th.sortable'));
+
+        const defaultSortColumn = table.dataset.defaultSortColumn;
+        if (defaultSortColumn) {
+            const defaultHeader = headers.find((header) => header.dataset.column === defaultSortColumn);
+            if (defaultHeader) {
+                defaultHeader.dataset.sortDirection = 'asc';
+                defaultHeader.classList.add('sorted-asc');
+                sortTable(table, defaultSortColumn, 'asc');
+            }
+        }
 
         headers.forEach((header) => {
             header.addEventListener('click', () => {

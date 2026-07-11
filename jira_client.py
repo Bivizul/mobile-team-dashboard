@@ -228,5 +228,8 @@ class JiraClient:
                 tracking.get(
                     "remainingEstimateSeconds",
                     0
-                )
+                ),
+
+            jira_url=
+                f"{self.base_url}/browse/{raw['key']}"
         )
