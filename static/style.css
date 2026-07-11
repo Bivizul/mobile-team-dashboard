@@ -34,6 +34,22 @@ body {
     border-radius: 6px;
 }
 
+.hrbox-panel {
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.hrbox-panel h3 {
+    margin: 0 0 8px;
+}
+
+.hrbox-panel p {
+    margin: 0;
+    color: #555;
+}
+
 .cards {
     display:flex;
     gap:20px;

@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 
 from jira_client import JiraClient
 from analytics import Analytics
+from hrbox_client import HrboxClient
 from utils import hours
 
 
@@ -16,6 +17,7 @@ app.jinja_env.filters["hours"] = hours
 def index():
 
     jira = JiraClient()
+    hrbox = HrboxClient()
 
     epic_link = request.args.get("epic_link", "").strip()
     fix_version = request.args.get("fix_version", "").strip()
@@ -50,6 +52,12 @@ def index():
 
         issues=
             analytics.task_list(),
+
+        hrbox_absences=
+            hrbox.get_team_absences(),
+
+        hrbox_configured=
+            hrbox.is_configured(),
 
         epic_options=
             jira.get_epic_options(),

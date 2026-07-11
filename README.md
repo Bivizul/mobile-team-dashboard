@@ -29,6 +29,7 @@ Simple Flask dashboard for viewing Jira issues and team progress.
 4. Configure environment variables:
    - Copy [.env.example](.env.example) to .env
    - Fill in the Jira API settings
+   - Fill in the HRBox credentials if you want to enable leave-calendar integration
 
 5. Run the app:
    ```bash

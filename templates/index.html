@@ -62,6 +62,14 @@ href="/static/style.css">
     </form>
 </div>
 
+<div class="hrbox-panel">
+    <h3>HRBox</h3>
+    {% if hrbox_configured %}
+        <p>HRBox is configured. Loaded {{ hrbox_absences|length }} leave entries.</p>
+    {% else %}
+        <p>HRBox is not configured yet. Add your credentials to the .env file to enable leave data.</p>
+    {% endif %}
+</div>
 
 <div class="cards">
 
