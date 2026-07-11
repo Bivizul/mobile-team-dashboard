@@ -65,14 +65,39 @@ href="/static/style.css">
 <div class="hrbox-panel">
     <h3>HRBox</h3>
     {% if hrbox_configured %}
-        <p>HRBox is configured. Loaded {{ hrbox_absences|length }} leave entries.</p>
+        <p>HRBox is configured. Showing {{ hrbox_absences|length }} leave entries for the selected Jira scope.</p>
+        {% if hrbox_status != 'ok' %}
+            <p class="hrbox-warning">HRBox returned no accessible leave data for the current scope. The integration may need a different endpoint or additional permissions.</p>
+        {% endif %}
+        {% if hrbox_error %}
+            <p class="hrbox-warning">Details: {{ hrbox_error }}</p>
+        {% endif %}
     {% else %}
         <p>HRBox is not configured yet. Add your credentials to the .env file to enable leave data.</p>
     {% endif %}
 </div>
 
-<div class="cards">
+{% if hrbox_configured and hrbox_absences %}
+<div class="hrbox-list">
+    <h3>Team leave calendar</h3>
+    <ul>
+        {% for absence in hrbox_absences %}
+        <li>
+            <strong>{{ absence.get('personName') or absence.get('employeeName') or absence.get('name') or 'Unknown' }}</strong>
+            — {{ absence.get('startDate') or absence.get('from') or absence.get('start') or absence.get('dateFrom') or 'n/a' }} → {{ absence.get('endDate') or absence.get('to') or absence.get('end') or absence.get('dateTo') or 'n/a' }}
+            {% if absence.get('type') %}
+            ({{ absence.get('type') }})
+            {% endif %}
+            {% if absence.get('_days_until') is not none %}
+            — {{ absence.get('_days_until') }} day(s) left
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 
+<div class="cards">
 
 <div class="card">
 <h3>Tasks</h3>
@@ -111,6 +136,10 @@ href="/static/style.css">
 {{summary.progress}} %
 </div>
 
+<div class="card">
+<h3>BR-547 logged since feature start</h3>
+{{ br547_logged_since_start | hours }} h
+</div>
 
 </div>
 
@@ -120,6 +149,25 @@ href="/static/style.css">
 Developers
 </h2>
 
+<form class="filters feature-planning" method="get">
+    <input type="hidden" name="epic_link" value="{{ selected_epic }}">
+    <input type="hidden" name="fix_version" value="{{ selected_fix_version }}">
+    <label>
+        <span>Feature start date</span>
+        <input type="date" name="feature_start_date" value="{{ feature_start_date }}" autocomplete="off">
+    </label>
+    <label>
+        <span>Feature deadline</span>
+        <input type="date" name="feature_deadline" value="{{ feature_deadline }}" autocomplete="off" readonly>
+    </label>
+    <label>
+        <span>Working hours/day</span>
+        <input type="number" name="working_hours_per_day" value="{{ working_hours_per_day }}" min="1" step="0.5" autocomplete="off">
+    </label>
+    <button type="submit">Apply</button>
+</form>
+
+<p class="feature-planning-hint">{{ feature_deadline_hint }}</p>
 
 <table data-default-sort-column="developer">
 

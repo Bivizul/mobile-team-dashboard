@@ -22,6 +22,7 @@ class Config:
         self.HRBOX_API_KEY = os.getenv("HRBOX_API_KEY")
         self.HRBOX_USERNAME = os.getenv("HRBOX_USERNAME")
         self.HRBOX_PASSWORD = os.getenv("HRBOX_PASSWORD")
+        self.HRBOX_VACATION_URL = os.getenv("HRBOX_VACATION_URL")
 
 
 config = Config()

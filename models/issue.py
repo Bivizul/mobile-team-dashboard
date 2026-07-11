@@ -15,3 +15,4 @@ class Issue:
     logged: int
     remaining: int
     jira_url: str = ""
+    updated: str = ""

@@ -91,7 +91,8 @@ class JiraClient:
                     "status",
                     "assignee",
                     "issuetype",
-                    "timetracking"
+                    "timetracking",
+                    "updated"
                 ]
         }
 
@@ -119,6 +120,39 @@ class JiraClient:
             for issue in data["issues"]
         ]
 
+
+    def get_issue_time_data(self, issue_key):
+        response = self.session.get(
+            f"{self.base_url}/rest/api/2/issue/{issue_key}",
+            params={
+                "fields": ["updated", "timetracking"],
+            },
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        fields = data.get("fields", {})
+        tracking = fields.get("timetracking") or {}
+
+        return {
+            "updated": fields.get("updated", ""),
+            "logged": tracking.get("timeSpentSeconds", 0),
+        }
+
+    def get_issue_worklog_by_author(self, issue_key):
+        response = self.session.get(
+            f"{self.base_url}/rest/api/2/issue/{issue_key}/worklog"
+        )
+        response.raise_for_status()
+
+        worklogs = response.json().get("worklogs", [])
+        totals = {}
+        for entry in worklogs:
+            author = entry.get("author", {})
+            author_name = author.get("displayName") or author.get("name") or "Unknown"
+            totals[author_name] = totals.get(author_name, 0) + int(entry.get("timeSpentSeconds", 0) or 0)
+
+        return totals
 
     def get_epic_options(self):
 
@@ -231,5 +265,7 @@ class JiraClient:
                 ),
 
             jira_url=
-                f"{self.base_url}/browse/{raw['key']}"
+                f"{self.base_url}/browse/{raw['key']}",
+
+            updated=fields.get("updated", "")
         )
