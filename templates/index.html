@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>
+Jira Dashboard for Mobile
+</title>
+
+<link rel="stylesheet"
+href="/static/style.css">
+
+</head>
+
+
+<body>
+
+
+<h1>
+Jira Team Dashboard for Mobile
+</h1>
+
+
+<div class="cards">
+
+
+<div class="card">
+<h3>Tasks</h3>
+{{summary.tasks}}
+</div>
+
+<div class="card">
+<h3>To Do</h3>
+{{summary.tasks_remaining_to_start}}
+</div>
+
+<div class="card">
+<h3>In Progress</h3>
+{{summary.tasks_in_progress}}
+</div>
+
+<div class="card">
+<h3>Done</h3>
+{{summary.tasks_done}}
+</div>
+
+<div class="card">
+<h3>Estimate</h3>
+{{summary.estimate | hours}} h
+</div>
+
+
+<div class="card">
+<h3>Logged</h3>
+{{summary.logged | hours}} h
+</div>
+
+
+<div class="card">
+<h3>Progress</h3>
+{{summary.progress}} %
+</div>
+
+
+</div>
+
+
+
+<h2>
+Developers
+</h2>
+
+
+<table>
+
+<tr>
+
+<th>
+Developer
+</th>
+
+<th>
+Tasks
+</th>
+
+<th>
+Estimate
+</th>
+
+<th>
+Logged
+</th>
+
+<th>
+Remaining
+</th>
+
+<th>
+Efficiency
+</th>
+
+</tr>
+
+
+{% for name,data in developers.items() %}
+
+<tr>
+
+<td>{{name}}</td>
+
+<td>{{data.tasks}}</td>
+
+<td>{{data.estimate | hours}} h</td>
+
+<td>{{data.logged | hours}} h</td>
+
+<td>{{data.remaining | hours}} h</td>
+
+<td>{{data.efficiency}} %</td>
+
+
+</tr>
+
+{% endfor %}
+
+<tr class="total-row">
+
+<td>
+<strong>
+TOTAL
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals.tasks}}
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals.estimate | hours}} h
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals.logged | hours}} h
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals.remaining | hours}} h
+</strong>
+</td>
+
+<td>
+<strong>
+{{totals.efficiency}} %
+</strong>
+</td>
+
+</tr>
+
+
+</table>
+
+
+
+<h2>
+Developers with logged time
+</h2>
+
+
+<table>
+
+<tr>
+
+<th>
+Developer
+</th>
+
+<th>
+Tasks
+</th>
+
+<th>
+Estimate
+</th>
+
+<th>
+Logged
+</th>
+
+<th>
+Remaining
+</th>
+
+<th>
+Efficiency
+</th>
+
+</tr>
+
+
+{% for name,data in developers_with_logged_time.items() %}
+
+<tr>
+
+<td>{{name}}</td>
+
+<td>{{data.tasks}}</td>
+
+<td>{{data.estimate | hours}} h</td>
+
+<td>{{data.logged | hours}} h</td>
+
+<td>{{data.remaining | hours}} h</td>
+
+<td>{{data.efficiency}} %</td>
+
+
+</tr>
+
+{% endfor %}
+
+<tr class="total-row">
+
+<td>
+<strong>
+TOTAL
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals_with_logged_time.tasks}}
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals_with_logged_time.estimate | hours}} h
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals_with_logged_time.logged | hours}} h
+</strong>
+</td>
+
+
+<td>
+<strong>
+{{totals_with_logged_time.remaining | hours}} h
+</strong>
+</td>
+
+<td>
+<strong>
+{{totals_with_logged_time.efficiency}} %
+</strong>
+</td>
+
+</tr>
+
+
+</table>
+
+
+
+<h2>
+Tasks
+</h2>
+
+
+<table>
+
+<tr>
+
+<th>
+Key
+</th>
+
+<th>
+Summary
+</th>
+
+<th>
+Assignee
+</th>
+
+<th>
+Estimate
+</th>
+
+<th>
+Logged
+</th>
+
+</tr>
+
+
+{% for issue in issues %}
+
+<tr>
+
+<td>
+{{issue.key}}
+</td>
+
+<td>
+{{issue.summary}}
+</td>
+
+<td>
+{{issue.assignee}}
+</td>
+
+<td>
+{{issue.estimate | hours}} h
+</td>
+
+<td>
+{{issue.logged | hours}} h
+</td>
+
+</tr>
+
+
+{% endfor %}
+
+</table>
+
+
+</body>
+
+</html>
