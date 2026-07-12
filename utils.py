@@ -112,3 +112,18 @@ def calculate_feature_deadline(start_date, estimate_hours, working_hours_per_day
 
     business_days = max(1, math.ceil(estimate_hours / working_hours_per_day))
     return add_business_days(start_date, business_days - 1)
+
+
+def count_business_days(start_date, end_date):
+    if not start_date or not end_date:
+        return 0
+    if start_date > end_date:
+        return 0
+
+    business_days = 0
+    current_date = start_date
+    while current_date <= end_date:
+        if current_date.weekday() < 5 and not is_russian_public_holiday(current_date):
+            business_days += 1
+        current_date += timedelta(days=1)
+    return business_days

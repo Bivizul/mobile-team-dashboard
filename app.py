@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify
 from jira_client import JiraClient
 from analytics import Analytics
 from hrbox_client import HrboxClient
-from utils import hours, parse_date, calculate_feature_deadline
+from utils import hours, parse_date, calculate_feature_deadline, count_business_days
 from persistence import load_state, save_state, update_filters, update_vacation, update_vacation_columns, clear_vacations
 
 
@@ -219,6 +219,9 @@ def index():
 
         br547_logged_since_start=
             sum(d.get("br547_logged", 0) for d in developers_data.values()),
+
+        business_days_since_start=
+            count_business_days(parsed_start_date, date.today()) if parsed_start_date else 0,
 
         vacations_state=
             state.get("vacations", {}),
