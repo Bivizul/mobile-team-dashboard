@@ -50,25 +50,6 @@ class JiraClientTests(unittest.TestCase):
         self.assertEqual(data["logged"], 7200)
         self.assertEqual(data["updated"], "2026-07-10T12:00:00.000+0000")
 
-    @patch("jira_client.requests.Session.get")
-    def test_get_issue_worklog_by_author_aggregates_time_per_developer(self, mock_get):
-        response = Mock()
-        response.raise_for_status.return_value = None
-        response.json.return_value = {
-            "worklogs": [
-                {"author": {"displayName": "Alice"}, "timeSpentSeconds": 1800},
-                {"author": {"displayName": "Alice"}, "timeSpentSeconds": 3600},
-                {"author": {"displayName": "Bob"}, "timeSpentSeconds": 5400},
-            ]
-        }
-        mock_get.return_value = response
-
-        client = JiraClient()
-        data = client.get_issue_worklog_by_author("BR-547")
-
-        self.assertEqual(data["Alice"], 5400)
-        self.assertEqual(data["Bob"], 5400)
-
 
 class HrboxClientTests(unittest.TestCase):
     def test_resolves_relative_form_actions_against_the_login_host(self):

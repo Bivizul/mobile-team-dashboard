@@ -62,13 +62,26 @@ def parse_date(value):
         return value.date()
     if isinstance(value, date):
         return value
+
+    s_value = str(value).strip()
+    if not s_value:
+        return None
+
+    # Try ISO format (Jira style: 2024-05-13T10:00:00.000+0000)
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).date()
+        clean_value = s_value.replace("Z", "+00:00")
+        # Python < 3.11 fromisoformat doesn't like +HHMM, it wants +HH:MM
+        if len(clean_value) > 19 and (clean_value[-5] == '+' or clean_value[-5] == '-') and clean_value[-3] != ':':
+            clean_value = clean_value[:-2] + ":" + clean_value[-2:]
+        return datetime.fromisoformat(clean_value).date()
+    except (ValueError, IndexError):
+        pass
+
+    # Try simple YYYY-MM-DD
+    try:
+        return datetime.strptime(s_value[:10], "%Y-%m-%d").date()
     except ValueError:
-        try:
-            return datetime.strptime(str(value), "%Y-%m-%d").date()
-        except ValueError:
-            return None
+        return None
 
 
 def is_russian_public_holiday(day):

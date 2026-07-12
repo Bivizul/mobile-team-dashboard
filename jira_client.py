@@ -125,7 +125,7 @@ class JiraClient:
         response = self.session.get(
             f"{self.base_url}/rest/api/2/issue/{issue_key}",
             params={
-                "fields": ["updated", "timetracking"],
+                "fields": ["updated", "timetracking", "worklog"],
             },
         )
         response.raise_for_status()
@@ -133,26 +133,34 @@ class JiraClient:
         data = response.json()
         fields = data.get("fields", {})
         tracking = fields.get("timetracking") or {}
+        worklog_data = fields.get("worklog", {}) or {}
+
+        worklogs = worklog_data.get("worklogs", [])
+        total_worklogs = worklog_data.get("total", 0)
+
+        # If there are more worklogs than returned in the initial response, fetch them all
+        if total_worklogs > len(worklogs):
+            url = f"{self.base_url}/rest/api/2/issue/{issue_key}/worklog"
+            while len(worklogs) < total_worklogs:
+                response = self.session.get(
+                    url,
+                    params={
+                        "startAt": len(worklogs),
+                        "maxResults": 100,
+                    },
+                )
+                response.raise_for_status()
+                page_data = response.json()
+                new_worklogs = page_data.get("worklogs", [])
+                if not new_worklogs:
+                    break
+                worklogs.extend(new_worklogs)
 
         return {
             "updated": fields.get("updated", ""),
             "logged": tracking.get("timeSpentSeconds", 0),
+            "worklogs": worklogs,
         }
-
-    def get_issue_worklog_by_author(self, issue_key):
-        response = self.session.get(
-            f"{self.base_url}/rest/api/2/issue/{issue_key}/worklog"
-        )
-        response.raise_for_status()
-
-        worklogs = response.json().get("worklogs", [])
-        totals = {}
-        for entry in worklogs:
-            author = entry.get("author", {})
-            author_name = author.get("displayName") or author.get("name") or "Unknown"
-            totals[author_name] = totals.get(author_name, 0) + int(entry.get("timeSpentSeconds", 0) or 0)
-
-        return totals
 
     def get_epic_options(self):
 

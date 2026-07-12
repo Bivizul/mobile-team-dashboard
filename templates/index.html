@@ -161,6 +161,10 @@ Developers
         <input type="date" name="feature_deadline" value="{{ feature_deadline }}" autocomplete="off" readonly>
     </label>
     <label>
+        <span>Real delivery date</span>
+        <input type="date" name="real_delivery_date" value="{{ real_delivery_date }}" autocomplete="off" readonly title="{{ real_delivery_hint }}">
+    </label>
+    <label>
         <span>Working hours/day</span>
         <input type="number" name="working_hours_per_day" value="{{ working_hours_per_day }}" min="1" step="0.5" autocomplete="off">
     </label>
@@ -198,6 +202,10 @@ Remaining
 Efficiency
 </th>
 
+<th class="sortable" data-column="br547_logged">
+Meets since feature start
+</th>
+
 </tr>
 </thead>
 
@@ -217,6 +225,8 @@ Efficiency
 <td data-column="remaining" data-sort-value="{{ data.remaining }}">{{data.remaining | hours}} h</td>
 
 <td data-column="efficiency" data-sort-value="{{ data.efficiency }}">{{data.efficiency}} %</td>
+
+<td data-column="br547_logged" data-sort-value="{{ data.br547_logged }}">{{data.br547_logged | hours}} h</td>
 
 
 </tr>
@@ -267,6 +277,12 @@ TOTAL
 </strong>
 </td>
 
+<td>
+<strong>
+{{totals.br547_logged | hours}} h
+</strong>
+</td>
+
 </tr>
 </tfoot>
 
@@ -309,6 +325,10 @@ Remaining
 Efficiency
 </th>
 
+<th class="sortable" data-column="br547_logged">
+Meets since feature start
+</th>
+
 </tr>
 </thead>
 
@@ -328,6 +348,8 @@ Efficiency
 <td data-column="remaining" data-sort-value="{{ data.remaining }}">{{data.remaining | hours}} h</td>
 
 <td data-column="efficiency" data-sort-value="{{ data.efficiency }}">{{data.efficiency}} %</td>
+
+<td data-column="br547_logged" data-sort-value="{{ data.br547_logged }}">{{data.br547_logged | hours}} h</td>
 
 
 </tr>
@@ -375,6 +397,12 @@ TOTAL
 <td>
 <strong>
 {{totals_with_logged_time.efficiency}} %
+</strong>
+</td>
+
+<td>
+<strong>
+{{totals_with_logged_time.br547_logged | hours}} h
 </strong>
 </td>
 

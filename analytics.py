@@ -6,6 +6,7 @@ class Analytics:
 
     def __init__(self, issues):
         self.issues = issues
+        from utils import parse_date
 
 
     def summary(self):
@@ -72,18 +73,21 @@ class Analytics:
 
 
 
-    def developers(self):
+    def developers(self, br547_worklogs=None, feature_start_date=None):
 
         result = defaultdict(
             lambda:{
                 "tasks":0,
                 "estimate":0,
                 "logged":0,
+                "br547_logged": 0,
                 "remaining":0,
-                "efficiency": 0
+                "efficiency": 0,
+                "real_effort": 0 # Time spent for done tasks, estimate for others
             }
         )
 
+        done_statuses = ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]
 
         for issue in self.issues:
 
@@ -106,6 +110,28 @@ class Analytics:
                 issue.remaining
             )
 
+            if issue.status in done_statuses:
+                developer["real_effort"] += issue.logged
+            else:
+                developer["real_effort"] += issue.estimate
+
+        if br547_worklogs:
+            from utils import parse_date
+            for worklog in br547_worklogs:
+                author = worklog.get("author", {})
+                author_name = author.get("displayName") or author.get("name")
+                if author_name:
+                    author_name = author_name.strip()
+                    worklog_started = parse_date(worklog.get("started"))
+                    if not feature_start_date or (worklog_started and worklog_started >= feature_start_date):
+                        # Only add time to developers who are already in the results
+                        # (i.e., they belong to the current mobile team scope/filter)
+                        for existing_name in result.keys():
+                            if existing_name.lower() == author_name.lower():
+                                result[existing_name]["br547_logged"] += worklog.get("timeSpentSeconds", 0)
+                                break
+
+
         for developer in result.values():
             if developer["logged"] > 0:
                 developer["efficiency"] = round(
@@ -117,13 +143,14 @@ class Analytics:
 
 
 
-    def developers_with_logged_time(self):
+    def developers_with_logged_time(self, br547_worklogs=None, feature_start_date=None):
 
         result = defaultdict(
             lambda:{
                 "tasks":0,
                 "estimate":0,
                 "logged":0,
+                "br547_logged": 0,
                 "remaining":0,
                 "efficiency": 0
             }
@@ -154,6 +181,27 @@ class Analytics:
                 issue.remaining
             )
 
+        if br547_worklogs:
+            from utils import parse_date
+            for worklog in br547_worklogs:
+                author = worklog.get("author", {})
+                author_name = author.get("displayName") or author.get("name")
+                if author_name:
+                    author_name = author_name.strip()
+                    worklog_started = parse_date(worklog.get("started"))
+                    if not feature_start_date or (worklog_started and worklog_started >= feature_start_date):
+                        # For this table, we ONLY count time for developers who already have logged time
+                        # on tasks from the filter.
+                        found = False
+                        for existing_name in list(result.keys()):
+                            if existing_name.lower() == author_name.lower():
+                                result[existing_name]["br547_logged"] += worklog.get("timeSpentSeconds", 0)
+                                found = True
+                                break
+
+                        # We don't add new developers to this specific table if they only have BR-547 time
+                        # but no logged time on tasks from the filter.
+
         for developer in result.values():
             if developer["logged"] > 0:
                 developer["efficiency"] = round(
@@ -164,7 +212,7 @@ class Analytics:
         return dict(sorted(result.items()))
 
 
-    def totals_with_logged_time(self):
+    def totals_with_logged_time(self, developers_data=None):
         issues_with_logged_time = [
             issue for issue in self.issues if issue.logged > 0
         ]
@@ -179,6 +227,9 @@ class Analytics:
             for i in issues_with_logged_time
         )
 
+        br547_logged = 0
+        if developers_data:
+            br547_logged = sum(d.get("br547_logged", 0) for d in developers_data.values())
 
         return {
 
@@ -190,6 +241,9 @@ class Analytics:
 
             "logged":
                 logged,
+
+            "br547_logged":
+                br547_logged,
 
             "remaining":
                 sum(
@@ -215,7 +269,7 @@ class Analytics:
             if issue.logged > issue.estimate
         ]
     
-    def totals(self):
+    def totals(self, developers_data=None):
 
         estimate = sum(
             i.estimate
@@ -227,6 +281,10 @@ class Analytics:
             for i in self.issues
         )
 
+        br547_logged = 0
+        if developers_data:
+            br547_logged = sum(d.get("br547_logged", 0) for d in developers_data.values())
+
         return {
 
             "tasks":
@@ -237,6 +295,9 @@ class Analytics:
 
             "logged":
                 logged,
+
+            "br547_logged":
+                br547_logged,
 
             "remaining":
                 sum(

@@ -43,34 +43,6 @@ class HrboxClient:
         code = input("HRBox MFA/OTP code (blank to skip): ").strip()
         return code or None
 
-    def _build_login_url(self):
-        parsed_base = urlparse(self.base_url)
-        tenant = parsed_base.netloc or "blackhubgames.hrbox.io"
-        redirect_uri = self.vacation_url or self.base_url
-        login_host = f"https://{tenant}" if tenant else "https://auth.hrbox.io"
-        return f"{login_host}/auth/login?redirect_uri={quote(redirect_uri, safe='')}&auth_tenant={quote(tenant, safe='')}"
-
-    def _resolve_form_action_url(self, form_action, default_url):
-        if not form_action:
-            return default_url or self._build_login_url()
-
-        if form_action.startswith(("http://", "https://")):
-            return form_action
-
-        if form_action.startswith("//"):
-            return f"https:{form_action}"
-
-        if form_action.startswith("/"):
-            parsed_default = urlparse(default_url or self.base_url or "https://auth.hrbox.io")
-            if parsed_default.netloc:
-                return f"{parsed_default.scheme or 'https'}://{parsed_default.netloc}{form_action}"
-            return f"https://auth.hrbox.io{form_action}"
-
-        parsed_default = urlparse(default_url or self.base_url or "https://auth.hrbox.io")
-        if parsed_default.netloc:
-            return f"{parsed_default.scheme or 'https'}://{parsed_default.netloc}/{form_action}"
-        return f"https://auth.hrbox.io/{form_action}"
-
     def _is_mfa_challenge(self, html_text):
         lowered = html_text.lower()
         if any(token in lowered for token in [
@@ -105,7 +77,12 @@ class HrboxClient:
     def _submit_form(self, html_text, default_url, payload, referer):
         form_action_match = re.search(r'<form[^>]+action="([^"]+)"', html_text, re.I)
         form_action = form_action_match.group(1) if form_action_match else default_url or "/auth/login"
-        post_url = self._resolve_form_action_url(form_action, default_url)
+        if form_action.startswith("http"):
+            post_url = form_action
+        elif form_action.startswith("/"):
+            post_url = f"https://auth.hrbox.io{form_action}"
+        else:
+            post_url = f"https://auth.hrbox.io/{form_action}"
 
         return self.session.post(
             post_url,
@@ -120,7 +97,10 @@ class HrboxClient:
             self.last_error = "HRBox credentials are missing"
             return False
 
-        login_url = self._build_login_url()
+        parsed_base = urlparse(self.base_url)
+        tenant = parsed_base.netloc or "blackhubgames.hrbox.io"
+        redirect_uri = self.vacation_url or self.base_url
+        login_url = f"https://auth.hrbox.io/auth/login?redirect_uri={quote(redirect_uri, safe='')}&auth_tenant={quote(tenant, safe='')}"
 
         try:
             login_page = self.session.get(login_url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})

@@ -44,7 +44,10 @@ def index():
     hrbox_error = getattr(hrbox, "last_error", None)
     current_year = date.today().year
 
-    start_date = parse_date(feature_start_date) or date.today()
+    feature_start_date_param = request.args.get("feature_start_date", "").strip()
+    parsed_start_date = parse_date(feature_start_date_param)
+    start_date = parsed_start_date or date.today()
+
     try:
         working_hours = float(working_hours_per_day)
     except ValueError:
@@ -57,12 +60,32 @@ def index():
     deadline_date = calculate_feature_deadline(start_date, largest_developer_estimate_hours, working_hours)
 
     br547_issue_data = jira.get_issue_time_data(BR547_ISSUE_KEY)
-    br547_logged_since_start = 0
-    updated_date = parse_date(br547_issue_data.get("updated", ""))
-    if not start_date or not updated_date or updated_date >= start_date:
-        br547_logged_since_start = br547_issue_data.get("logged", 0)
+    br547_worklogs = br547_issue_data.get("worklogs", [])
 
-    br547_worklog_by_author = jira.get_issue_worklog_by_author(BR547_ISSUE_KEY)
+    br547_logged_since_start = 0
+    for wl in br547_worklogs:
+        wl_date = parse_date(wl.get("started"))
+        if not parsed_start_date or (wl_date and wl_date >= parsed_start_date):
+            br547_logged_since_start += wl.get("timeSpentSeconds", 0)
+
+    developers_data = analytics.developers(
+        br547_worklogs=br547_worklogs,
+        feature_start_date=parsed_start_date,
+    )
+    developers_with_logged_time_data = analytics.developers_with_logged_time(
+        br547_worklogs=br547_worklogs,
+        feature_start_date=parsed_start_date,
+    )
+
+    developer_estimates = [data["estimate"] for data in developers_data.values()]
+    largest_developer_estimate = max(developer_estimates) if developer_estimates else 0
+    largest_developer_estimate_hours = largest_developer_estimate / 3600
+    deadline_date = calculate_feature_deadline(start_date, largest_developer_estimate_hours, working_hours)
+
+    developer_real_efforts = [data["real_effort"] for data in developers_data.values()]
+    largest_developer_real_effort = max(developer_real_efforts) if developer_real_efforts else 0
+    largest_developer_real_effort_hours = largest_developer_real_effort / 3600
+    real_delivery_date = calculate_feature_deadline(start_date, largest_developer_real_effort_hours, working_hours)
 
     def is_current_year_absence(absence):
         start_date = parse_date(absence.get("startDate") or absence.get("from") or absence.get("start") or absence.get("dateFrom"))
@@ -102,20 +125,16 @@ def index():
         summary=
             analytics.summary(),
 
-        developers=
-            analytics.developers(),
-
-        br547_worklog_by_author=
-            br547_worklog_by_author,
+        developers=developers_data,
 
         developers_with_logged_time=
-            analytics.developers_with_logged_time(),
+            developers_with_logged_time_data,
 
         totals_with_logged_time=
-            analytics.totals_with_logged_time(),
+            analytics.totals_with_logged_time(developers_data=developers_with_logged_time_data),
 
         totals=
-            analytics.totals(),
+            analytics.totals(developers_data=developers_data),
 
         issues=
             analytics.task_list(),
@@ -145,13 +164,19 @@ def index():
             fix_version,
 
         feature_start_date=
-            start_date.strftime("%Y-%m-%d") if start_date else "",
+            parsed_start_date.strftime("%Y-%m-%d") if parsed_start_date else "",
 
         feature_deadline=
             deadline_date.strftime("%Y-%m-%d") if deadline_date else "",
 
+        real_delivery_date=
+            real_delivery_date.strftime("%Y-%m-%d") if real_delivery_date else "",
+
         feature_deadline_hint=
             f"Based on the largest developer estimate ({largest_developer_estimate_hours:.1f} h) and {working_hours:.1f} working hours/day",
+
+        real_delivery_hint=
+            f"Based on real effort: spent for done tasks, estimate for others ({largest_developer_real_effort_hours:.1f} h)",
 
         working_hours_per_day=
             working_hours,

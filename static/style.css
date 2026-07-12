@@ -17,6 +17,7 @@ body {
     gap: 12px;
     flex-wrap: wrap;
     justify-content: flex-end;
+    align-items: flex-end;
 }
 
 .filters label {
@@ -201,7 +202,7 @@ td:nth-child(n+2) {
 
 
 th {
-    background: #333;
+    background: #8a8a8a;
 }
 
 th.sortable {
@@ -226,12 +227,12 @@ th.sorted-desc::after {
 }
 
 tr:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(135, 135, 135, 0.05);
 }
 
 .total-row {
 
-    background: #242424;
+    background: #646363;
 
     border-top:
         2px solid #666;
