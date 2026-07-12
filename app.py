@@ -55,6 +55,12 @@ def index():
             req_working_hours
         )
 
+    all_department_issues = jira.get_filter_issues()
+    all_department_assignees = sorted({
+        issue.assignee for issue in all_department_issues
+        if issue.assignee and issue.assignee != "Unassigned"
+    })
+
     issues = jira.get_filter_issues(
         epic_link=epic_link,
         fix_version=fix_version,
@@ -137,8 +143,8 @@ def index():
             assignee.lower() in str(absence.get("personName", "")).lower()
             or assignee.lower() in str(absence.get("employeeName", "")).lower()
             or assignee.lower() in str(absence.get("name", "")).lower()
-            for assignee in assignees
-        ) or not assignees:
+            for assignee in all_department_assignees
+        ) or not all_department_assignees:
             absence_record = dict(absence)
             absence_record["_days_until"] = days_until(absence)
             filtered_absences.append(absence_record)
@@ -219,6 +225,9 @@ def index():
 
         vacation_columns_count=
             state.get("vacationColumnsCount", 1),
+
+        all_department_assignees=
+            all_department_assignees,
     )
 
 

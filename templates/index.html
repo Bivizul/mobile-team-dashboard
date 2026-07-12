@@ -24,53 +24,13 @@ href="/static/style.css">
             <button class="tab-link" onclick="openTab(event, 'vacations-tab')">Team Vacations</button>
         </div>
     </div>
-
-    <form class="filters" method="get">
-        <label>
-            <span>Epic</span>
-            <input
-                type="text"
-                name="epic_link"
-                list="epic-options"
-                value="{{ selected_epic }}"
-                autocomplete="off"
-                placeholder="Type to search"
-            >
-            <datalist id="epic-options">
-                <option value="">All epics</option>
-                {% for option in epic_options %}
-                <option value="{{ option.value }}">{{ option.label }}</option>
-                {% endfor %}
-            </datalist>
-        </label>
-
-        <label>
-            <span>Fix Version</span>
-            <input
-                type="text"
-                name="fix_version"
-                list="fix-version-options"
-                value="{{ selected_fix_version }}"
-                autocomplete="off"
-                placeholder="Type to search"
-            >
-            <datalist id="fix-version-options">
-                <option value="">All versions</option>
-                {% for option in fix_version_options %}
-                <option value="{{ option.value }}">{{ option.label }}</option>
-                {% endfor %}
-            </datalist>
-        </label>
-
-        <button type="submit">Apply</button>
-    </form>
 </div>
 
 <div id="vacations-tab" class="tab-content">
     <div class="hrbox-panel">
         <h3>HRBox Status</h3>
         {% if hrbox_configured %}
-            <p>HRBox is configured. Showing {{ hrbox_absences|length }} leave entries for the selected Jira scope.</p>
+            <p>HRBox is configured. Showing {{ hrbox_absences|length }} leave entries for the mobile team.</p>
             {% if hrbox_status != 'ok' %}
                 <p class="hrbox-warning">HRBox returned no accessible leave data for the current scope. The integration may need a different endpoint or additional permissions.</p>
             {% endif %}
@@ -123,6 +83,46 @@ href="/static/style.css">
 </div>
 
 <div id="dashboard-tab" class="tab-content active">
+    <form class="filters" method="get">
+        <label>
+            <span>Epic</span>
+            <input
+                type="text"
+                name="epic_link"
+                list="epic-options"
+                value="{{ selected_epic }}"
+                autocomplete="off"
+                placeholder="Type to search"
+            >
+            <datalist id="epic-options">
+                <option value="">All epics</option>
+                {% for option in epic_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+            </datalist>
+        </label>
+
+        <label>
+            <span>Fix Version</span>
+            <input
+                type="text"
+                name="fix_version"
+                list="fix-version-options"
+                value="{{ selected_fix_version }}"
+                autocomplete="off"
+                placeholder="Type to search"
+            >
+            <datalist id="fix-version-options">
+                <option value="">All versions</option>
+                {% for option in fix_version_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+            </datalist>
+        </label>
+
+        <button type="submit">Apply</button>
+    </form>
+
     <div class="cards">
 
     <div class="card" title="Общее количество задач в выбранном фильтре (исключая отклоненные без логов)">
@@ -569,7 +569,7 @@ function openTab(evt, tabName) {
 }
 
 // Vacation Planner Logic
-const teamMembers = {{ developers.keys() | list | tojson }};
+const teamMembers = {{ all_department_assignees | tojson }};
 const initialVacationsState = {{ vacations_state | tojson }};
 let vacationColumnsCount = {{ vacation_columns_count }};
 
