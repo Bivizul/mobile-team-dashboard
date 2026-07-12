@@ -211,6 +211,12 @@ body {
     font-size: 13px;
 }
 
+.cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
 
 .card {
 

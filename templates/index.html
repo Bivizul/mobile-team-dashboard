@@ -5,7 +5,7 @@
 <head>
 
 <title>
-Jira Dashboard for Mobile
+Mobile Team Dashboard
 </title>
 
 <link rel="stylesheet"
@@ -18,7 +18,7 @@ href="/static/style.css">
 
 <div class="toolbar">
     <div class="header-main">
-        <h1>Jira Team Dashboard for Mobile</h1>
+        <h1>Mobile Team Dashboard</h1>
         <div class="nav-tabs">
             <button class="tab-link active" onclick="openTab(event, 'dashboard-tab')">Dashboard</button>
             <button class="tab-link" onclick="openTab(event, 'vacations-tab')">Team Vacations</button>
@@ -563,17 +563,28 @@ function initVacationPlanner() {
             const storageKey = `v_${name}_${i}`;
             const savedData = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
 
+            // We use a safe ID by replacing spaces
+            const safeId = `info_${name.replace(/\s+/g, '_')}_${i}`;
+
             cell.innerHTML = `
                 <div class="v-input-group">
                     <input type="date" class="v-start" value="${savedData.start}" onchange="updateVacation('${name}', ${i}, this, 'start')">
                     <input type="date" class="v-end" value="${savedData.end}" onchange="updateVacation('${name}', ${i}, this, 'end')">
                 </div>
-                <div class="v-info" id="info_${name}_${i}"></div>
+                <div class="v-info" id="${safeId}"></div>
             `;
             row.appendChild(cell);
-            updateInfo(name, i, savedData.start, savedData.end);
         }
         body.appendChild(row);
+    });
+
+    // AFTER all rows are in DOM, update the info display
+    teamMembers.forEach(name => {
+        for (let i = 1; i <= vacationColumnsCount; i++) {
+            const storageKey = `v_${name}_${i}`;
+            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
+            updateInfo(name, i, savedData.start, savedData.end);
+        }
     });
 }
 
@@ -586,9 +597,12 @@ function updateVacation(name, index, input, field) {
 }
 
 function updateInfo(name, index, startStr, endStr) {
-    const infoDiv = document.getElementById(`info_${name}_${index}`);
-    if (!infoDiv || !startStr || !endStr) {
-        if (infoDiv) infoDiv.innerHTML = '';
+    const safeId = `info_${name.replace(/\s+/g, '_')}_${index}`;
+    const infoDiv = document.getElementById(safeId);
+    if (!infoDiv) return;
+
+    if (!startStr || !endStr) {
+        infoDiv.innerHTML = '';
         return;
     }
 
