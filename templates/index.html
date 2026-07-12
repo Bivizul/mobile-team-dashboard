@@ -17,9 +17,13 @@ href="/static/style.css">
 <body>
 
 <div class="toolbar">
-    <h1>
-    Jira Team Dashboard for Mobile
-    </h1>
+    <div class="header-main">
+        <h1>Jira Team Dashboard for Mobile</h1>
+        <div class="nav-tabs">
+            <button class="tab-link active" onclick="openTab(event, 'dashboard-tab')">Dashboard</button>
+            <button class="tab-link" onclick="openTab(event, 'vacations-tab')">Team Vacations</button>
+        </div>
+    </div>
 
     <form class="filters" method="get">
         <label>
@@ -62,45 +66,67 @@ href="/static/style.css">
     </form>
 </div>
 
-<div class="hrbox-panel">
-    <h3>HRBox</h3>
-    {% if hrbox_configured %}
-        <p>HRBox is configured. Showing {{ hrbox_absences|length }} leave entries for the selected Jira scope.</p>
-        {% if hrbox_status != 'ok' %}
-            <p class="hrbox-warning">HRBox returned no accessible leave data for the current scope. The integration may need a different endpoint or additional permissions.</p>
+<div id="vacations-tab" class="tab-content">
+    <div class="hrbox-panel">
+        <h3>HRBox Status</h3>
+        {% if hrbox_configured %}
+            <p>HRBox is configured. Showing {{ hrbox_absences|length }} leave entries for the selected Jira scope.</p>
+            {% if hrbox_status != 'ok' %}
+                <p class="hrbox-warning">HRBox returned no accessible leave data for the current scope. The integration may need a different endpoint or additional permissions.</p>
+            {% endif %}
+            {% if hrbox_error %}
+                <p class="hrbox-warning">Details: {{ hrbox_error }}</p>
+            {% endif %}
+        {% else %}
+            <p>HRBox is not configured yet. Add your credentials to the .env file to enable leave data.</p>
         {% endif %}
-        {% if hrbox_error %}
-            <p class="hrbox-warning">Details: {{ hrbox_error }}</p>
-        {% endif %}
-    {% else %}
-        <p>HRBox is not configured yet. Add your credentials to the .env file to enable leave data.</p>
+    </div>
+
+    {% if hrbox_configured and hrbox_absences %}
+    <div class="hrbox-list">
+        <h3>Confirmed leave calendar (HRBox)</h3>
+        <ul>
+            {% for absence in hrbox_absences %}
+            <li>
+                <strong>{{ absence.get('personName') or absence.get('employeeName') or absence.get('name') or 'Unknown' }}</strong>
+                — {{ absence.get('startDate') or absence.get('from') or absence.get('start') or absence.get('dateFrom') or 'n/a' }} → {{ absence.get('endDate') or absence.get('to') or absence.get('end') or absence.get('dateTo') or 'n/a' }}
+                {% if absence.get('type') %}
+                ({{ absence.get('type') }})
+                {% endif %}
+                {% if absence.get('_days_until') is not none %}
+                — {{ absence.get('_days_until') }} day(s) left
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
     {% endif %}
+
+    <div class="vacation-planner">
+        <h3>Interactive Vacation Planner</h3>
+        <div class="planner-actions">
+            <button onclick="addVacationColumn()" class="secondary-button">+ Add Vacation Column</button>
+            <button onclick="clearPlanner()" class="danger-button">Clear All Data</button>
+        </div>
+        <table class="vacation-planner-table" id="vacation-planner-table">
+            <thead>
+                <tr id="planner-header">
+                    <th>Developer</th>
+                    <!-- Columns added via JS -->
+                </tr>
+            </thead>
+            <tbody id="planner-body">
+                <!-- Rows added via JS -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
-{% if hrbox_configured and hrbox_absences %}
-<div class="hrbox-list">
-    <h3>Team leave calendar</h3>
-    <ul>
-        {% for absence in hrbox_absences %}
-        <li>
-            <strong>{{ absence.get('personName') or absence.get('employeeName') or absence.get('name') or 'Unknown' }}</strong>
-            — {{ absence.get('startDate') or absence.get('from') or absence.get('start') or absence.get('dateFrom') or 'n/a' }} → {{ absence.get('endDate') or absence.get('to') or absence.get('end') or absence.get('dateTo') or 'n/a' }}
-            {% if absence.get('type') %}
-            ({{ absence.get('type') }})
-            {% endif %}
-            {% if absence.get('_days_until') is not none %}
-            — {{ absence.get('_days_until') }} day(s) left
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
+<div id="dashboard-tab" class="tab-content active">
+    <div class="cards">
 
-<div class="cards">
-
-<div class="card">
-<h3>Tasks</h3>
+    <div class="card">
+    <h3>Tasks</h3>
 {{summary.tasks}}
 </div>
 
@@ -488,8 +514,146 @@ Efficiency
 
 </table>
 
+</div>
+
 <script>
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+        tabcontent[i].classList.remove("active");
+    }
+    tablinks = document.getElementsByClassName("tab-link");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove("active");
+    }
+    document.getElementById(tabName).style.display = "block";
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+
+    // Save tab preference to localStorage
+    localStorage.setItem('activeTab', tabName);
+}
+
+// Vacation Planner Logic
+const teamMembers = {{ developers.keys() | list | tojson }};
+let vacationColumnsCount = parseInt(localStorage.getItem('vacationColumnsCount') || '1');
+
+function initVacationPlanner() {
+    const header = document.getElementById('planner-header');
+    const body = document.getElementById('planner-body');
+    if (!header || !body) return;
+
+    // Clear and build header
+    header.innerHTML = '<th>Developer</th>';
+    for (let i = 1; i <= vacationColumnsCount; i++) {
+        header.innerHTML += `<th>Vacation ${i}</th>`;
+    }
+
+    // Build rows
+    body.innerHTML = '';
+    teamMembers.forEach(name => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td><strong>${name}</strong></td>`;
+
+        for (let i = 1; i <= vacationColumnsCount; i++) {
+            const cell = document.createElement('td');
+            cell.className = 'vacation-cell';
+            const storageKey = `v_${name}_${i}`;
+            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
+
+            cell.innerHTML = `
+                <div class="v-input-group">
+                    <input type="date" class="v-start" value="${savedData.start}" onchange="updateVacation('${name}', ${i}, this, 'start')">
+                    <input type="date" class="v-end" value="${savedData.end}" onchange="updateVacation('${name}', ${i}, this, 'end')">
+                </div>
+                <div class="v-info" id="info_${name}_${i}"></div>
+            `;
+            row.appendChild(cell);
+            updateInfo(name, i, savedData.start, savedData.end);
+        }
+        body.appendChild(row);
+    });
+}
+
+function updateVacation(name, index, input, field) {
+    const storageKey = `v_${name}_${index}`;
+    const data = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
+    data[field] = input.value;
+    localStorage.setItem(storageKey, JSON.stringify(data));
+    updateInfo(name, index, data.start, data.end);
+}
+
+function updateInfo(name, index, startStr, endStr) {
+    const infoDiv = document.getElementById(`info_${name}_${index}`);
+    if (!infoDiv || !startStr || !endStr) {
+        if (infoDiv) infoDiv.innerHTML = '';
+        return;
+    }
+
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    if (isNaN(start) || isNaN(end)) return;
+
+    const duration = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const daysUntil = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+
+    if (duration < 0) {
+        infoDiv.innerHTML = '<span style="color:red">End date before start</span>';
+        return;
+    }
+
+    let statusText = '';
+    if (daysUntil < 0) {
+        statusText = 'Already passed/started';
+    } else if (daysUntil === 0) {
+        statusText = '<strong>Starts today!</strong>';
+    } else {
+        statusText = `Starts in <strong>${daysUntil}</strong> day(s)`;
+    }
+
+    infoDiv.innerHTML = `
+        Duration: <strong>${duration} days</strong><br>
+        ${statusText}
+    `;
+}
+
+function addVacationColumn() {
+    vacationColumnsCount++;
+    localStorage.setItem('vacationColumnsCount', vacationColumnsCount);
+    initVacationPlanner();
+}
+
+function clearPlanner() {
+    if (confirm('Clear all manually entered vacation data?')) {
+        teamMembers.forEach(name => {
+            for (let i = 1; i <= 10; i++) {
+                localStorage.removeItem(`v_${name}_${i}`);
+            }
+        });
+        vacationColumnsCount = 1;
+        localStorage.setItem('vacationColumnsCount', '1');
+        initVacationPlanner();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initVacationPlanner();
+
+    // Restore active tab
+    const activeTab = localStorage.getItem('activeTab');
+    if (activeTab && document.getElementById(activeTab)) {
+        const tabButton = Array.from(document.querySelectorAll('.tab-link'))
+            .find(btn => btn.getAttribute('onclick').includes(activeTab));
+        if (tabButton) {
+            tabButton.click();
+        }
+    }
+
     document.querySelectorAll('table').forEach((table) => {
         const headers = Array.from(table.querySelectorAll('th.sortable'));
 
