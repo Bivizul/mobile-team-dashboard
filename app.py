@@ -1,11 +1,12 @@
 from datetime import datetime, date
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
 from jira_client import JiraClient
 from analytics import Analytics
 from hrbox_client import HrboxClient
 from utils import hours, parse_date, calculate_feature_deadline
+from persistence import load_state, save_state, update_filters, update_vacation, update_vacation_columns, clear_vacations
 
 
 BR547_ISSUE_KEY = "BR-547"
@@ -23,11 +24,36 @@ def index():
 
     jira = JiraClient()
     hrbox = HrboxClient()
+    state = load_state()
+    filters = state.get("filters", {})
+    scoped_all = state.get("scoped_data", {})
 
-    epic_link = request.args.get("epic_link", "").strip()
-    fix_version = request.args.get("fix_version", "").strip()
-    feature_start_date = request.args.get("feature_start_date", "").strip()
-    working_hours_per_day = request.args.get("working_hours_per_day", "8").strip()
+    # 1. Determine the scope from request or global fallback
+    epic_link = request.args.get("epic_link", filters.get("epic_link", "")).strip()
+    fix_version = request.args.get("fix_version", filters.get("fix_version", "")).strip()
+
+    from persistence import get_scope_key
+    scope_key = get_scope_key(epic_link, fix_version)
+    scoped_data = scoped_all.get(scope_key, {})
+
+    # 2. Get other params, preferring request -> scoped -> global
+    req_start_date = request.args.get("feature_start_date")
+    req_working_hours = request.args.get("working_hours_per_day")
+
+    feature_start_date = req_start_date if req_start_date is not None else scoped_data.get("feature_start_date", filters.get("feature_start_date", ""))
+    working_hours_per_day = req_working_hours if req_working_hours is not None else scoped_data.get("working_hours_per_day", filters.get("working_hours_per_day", "8"))
+
+    feature_start_date = feature_start_date.strip()
+    working_hours_per_day = working_hours_per_day.strip()
+
+    # 3. Save if ANY relevant param is in request
+    if any(k in request.args for k in ["epic_link", "fix_version", "feature_start_date", "working_hours_per_day"]):
+        update_filters(
+            epic_link,
+            fix_version,
+            req_start_date, # Pass actual request value (might be None if not in form)
+            req_working_hours
+        )
 
     issues = jira.get_filter_issues(
         epic_link=epic_link,
@@ -44,8 +70,8 @@ def index():
     hrbox_error = getattr(hrbox, "last_error", None)
     current_year = date.today().year
 
-    feature_start_date_param = request.args.get("feature_start_date", "").strip()
-    parsed_start_date = parse_date(feature_start_date_param)
+    # Use the resolved feature_start_date (from request, scoped data or global filters)
+    parsed_start_date = parse_date(feature_start_date)
     start_date = parsed_start_date or date.today()
 
     try:
@@ -178,7 +204,33 @@ def index():
 
         br547_logged_since_start=
             br547_logged_since_start,
+
+        vacations_state=
+            state.get("vacations", {}),
+
+        vacation_columns_count=
+            state.get("vacationColumnsCount", 1),
     )
+
+
+@app.route("/api/vacation", methods=["POST"])
+def api_update_vacation():
+    data = request.json
+    update_vacation(data["name"], data["index"], data["start"], data["end"])
+    return jsonify({"status": "ok"})
+
+
+@app.route("/api/vacation/columns", methods=["POST"])
+def api_update_columns():
+    data = request.json
+    update_vacation_columns(data["count"])
+    return jsonify({"status": "ok"})
+
+
+@app.route("/api/vacation/clear", methods=["POST"])
+def api_clear_vacations():
+    clear_vacations()
+    return jsonify({"status": "ok"})
 
 
 

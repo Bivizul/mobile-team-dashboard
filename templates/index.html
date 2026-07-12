@@ -538,7 +538,8 @@ function openTab(evt, tabName) {
 
 // Vacation Planner Logic
 const teamMembers = {{ developers.keys() | list | tojson }};
-let vacationColumnsCount = parseInt(localStorage.getItem('vacationColumnsCount') || '1');
+const initialVacationsState = {{ vacations_state | tojson }};
+let vacationColumnsCount = {{ vacation_columns_count }};
 
 function initVacationPlanner() {
     const header = document.getElementById('planner-header');
@@ -561,7 +562,7 @@ function initVacationPlanner() {
             const cell = document.createElement('td');
             cell.className = 'vacation-cell';
             const storageKey = `v_${name}_${i}`;
-            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
+            const savedData = initialVacationsState[storageKey] || {"start":"","end":""};
 
             // We use a safe ID by replacing spaces
             const safeId = `info_${name.replace(/\s+/g, '_')}_${i}`;
@@ -582,18 +583,34 @@ function initVacationPlanner() {
     teamMembers.forEach(name => {
         for (let i = 1; i <= vacationColumnsCount; i++) {
             const storageKey = `v_${name}_${i}`;
-            const savedData = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
+            const savedData = initialVacationsState[storageKey] || {"start":"","end":""};
             updateInfo(name, i, savedData.start, savedData.end);
         }
     });
 }
 
-function updateVacation(name, index, input, field) {
+async function updateVacation(name, index, input, field) {
     const storageKey = `v_${name}_${index}`;
-    const data = JSON.parse(localStorage.getItem(storageKey) || '{"start":"","end":""}');
-    data[field] = input.value;
-    localStorage.setItem(storageKey, JSON.stringify(data));
-    updateInfo(name, index, data.start, data.end);
+    // Find current values in inputs
+    const cell = input.closest('td');
+    const startVal = cell.querySelector('.v-start').value;
+    const endVal = cell.querySelector('.v-end').value;
+
+    // Update local state so re-renders (like when adding columns) don't lose data
+    initialVacationsState[storageKey] = { start: startVal, end: endVal };
+
+    updateInfo(name, index, startVal, endVal);
+
+    // Sync to backend
+    try {
+        await fetch('/api/vacation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, index, start: startVal, end: endVal })
+        });
+    } catch (e) {
+        console.error("Failed to sync vacation to backend", e);
+    }
 }
 
 function updateInfo(name, index, startStr, endStr) {
@@ -636,22 +653,20 @@ function updateInfo(name, index, startStr, endStr) {
     `;
 }
 
-function addVacationColumn() {
+async function addVacationColumn() {
     vacationColumnsCount++;
-    localStorage.setItem('vacationColumnsCount', vacationColumnsCount);
     initVacationPlanner();
+    await fetch('/api/vacation/columns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: vacationColumnsCount })
+    });
 }
 
-function clearPlanner() {
+async function clearPlanner() {
     if (confirm('Clear all manually entered vacation data?')) {
-        teamMembers.forEach(name => {
-            for (let i = 1; i <= 10; i++) {
-                localStorage.removeItem(`v_${name}_${i}`);
-            }
-        });
-        vacationColumnsCount = 1;
-        localStorage.setItem('vacationColumnsCount', '1');
-        initVacationPlanner();
+        await fetch('/api/vacation/clear', { method: 'POST' });
+        location.reload();
     }
 }
 
