@@ -218,7 +218,7 @@ def index():
             working_hours,
 
         br547_logged_since_start=
-            br547_logged_since_start,
+            sum(d.get("br547_logged", 0) for d in developers_data.values()),
 
         vacations_state=
             state.get("vacations", {}),
