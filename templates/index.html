@@ -409,7 +409,7 @@ TOTAL
 </strong>
 </td>
 
-<td>
+<td data-column="efficiency">
 <strong>
 {{totals_with_logged_time.efficiency}} %
 </strong>
@@ -459,6 +459,10 @@ Estimate
 Logged
 </th>
 
+<th class="sortable" data-column="remaining">
+Remaining
+</th>
+
 <th class="sortable" data-column="efficiency">
 Efficiency
 </th>
@@ -489,6 +493,10 @@ Efficiency
 
 <td data-column="logged" data-sort-value="{{ issue.logged }}">
 {{issue.logged | hours}} h
+</td>
+
+<td data-column="remaining" data-sort-value="{{ issue.estimate - issue.logged }}">
+{{ (issue.estimate - issue.logged) | hours }} h
 </td>
 
 <td data-column="efficiency" data-sort-value="{{ ((issue.estimate / issue.logged * 100) if issue.logged else 0) }}">

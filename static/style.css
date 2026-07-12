@@ -361,3 +361,8 @@ tr:hover {
         2px solid #666;
 
 }
+
+/* Hiding Efficiency column while keeping it in HTML */
+[data-column="efficiency"] {
+    display: none !important;
+}
