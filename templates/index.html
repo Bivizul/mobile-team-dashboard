@@ -125,44 +125,44 @@ href="/static/style.css">
 <div id="dashboard-tab" class="tab-content active">
     <div class="cards">
 
-    <div class="card">
+    <div class="card" title="Общее количество задач в выбранном фильтре (исключая отклоненные без логов)">
     <h3>Tasks</h3>
 {{summary.tasks}}
 </div>
 
-<div class="card">
+<div class="card" title="Количество задач, к которым еще не приступили">
 <h3>To Do</h3>
 {{summary.tasks_remaining_to_start}}
 </div>
 
-<div class="card">
+<div class="card" title="Количество задач в статусе In Progress">
 <h3>In Progress</h3>
 {{summary.tasks_in_progress}}
 </div>
 
-<div class="card">
+<div class="card" title="Количество завершенных задач (включая проверку и тестирование)">
 <h3>Done</h3>
 {{summary.tasks_done}}
 </div>
 
-<div class="card">
+<div class="card" title="Суммарная первоначальная оценка всех задач">
 <h3>Estimate</h3>
 {{summary.estimate | hours}} h
 </div>
 
 
-<div class="card">
+<div class="card" title="Общее время, фактически затраченное на задачи">
 <h3>Logged</h3>
 {{summary.logged | hours}} h
 </div>
 
 
-<div class="card">
+<div class="card" title="Процент завершенных задач от общего количества">
 <h3>Progress</h3>
 {{summary.progress}} %
 </div>
 
-<div class="card">
+<div class="card" title="Суммарное время, потраченное командой на встречи с даты старта фичи">
 <h3>BR-547 logged since feature start</h3>
 {{ br547_logged_since_start | hours }} h
 </div>

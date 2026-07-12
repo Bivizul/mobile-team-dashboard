@@ -1,7 +1,7 @@
 {
     "filters": {
         "epic_link": "",
-        "fix_version": "FR: Donate 2.0",
+        "fix_version": "FR: Localization: Full",
         "feature_start_date": "2026-06-15",
         "working_hours_per_day": "7"
     },
@@ -44,6 +44,8 @@
         "epic:all|fix:CTR: vol. 1.9": {
             "feature_start_date": "2026-05-30",
             "working_hours_per_day": "7.0"
-        }
+        },
+        "epic:all|fix:FR: Localization: MVP (iOS)": {},
+        "epic:all|fix:FR: Localization: Full": {}
     }
 }
