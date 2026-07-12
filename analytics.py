@@ -59,7 +59,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    i.remaining
+                    (min(0, i.estimate - i.logged) if i.status in self.done_statuses else (i.estimate - i.logged))
                     for i in self.issues
                 ),
 
@@ -90,34 +90,25 @@ class Analytics:
 
 
         for issue in self.issues:
-
-            developer = result[
-                issue.assignee
-            ]
-
-
+            developer = result[issue.assignee]
             developer["tasks"] += 1
+            developer["estimate"] += issue.estimate
+            developer["logged"] += issue.logged
 
-            developer["estimate"] += (
-                issue.estimate
-            )
+            # Logic: Show negative if exceeded. For Done tasks, don't show positive remaining.
+            diff = issue.estimate - issue.logged
+            if issue.status in self.done_statuses:
+                eff_remaining = min(0, diff)
+            else:
+                eff_remaining = diff
 
-            developer["logged"] += (
-                issue.logged
-            )
+            developer["remaining"] += eff_remaining
 
-            developer["remaining"] += (
-                issue.remaining
-            )
-
-            # Real effort calculation
+            # Real effort: spent time for done, max(estimate, logged) for others
             if issue.status in self.done_statuses:
                 projected = issue.logged
             else:
-                if issue.remaining > 0:
-                    projected = issue.logged + issue.remaining
-                else:
-                    projected = max(issue.estimate, issue.logged)
+                projected = max(issue.estimate, issue.logged)
 
             developer["real_effort"] += projected
 
@@ -170,34 +161,23 @@ class Analytics:
         ]
 
         for issue in issues_with_logged_time:
-
-            developer = result[
-                issue.assignee
-            ]
-
-
+            developer = result[issue.assignee]
             developer["tasks"] += 1
+            developer["estimate"] += issue.estimate
+            developer["logged"] += issue.logged
 
-            developer["estimate"] += (
-                issue.estimate
-            )
+            diff = issue.estimate - issue.logged
+            if issue.status in self.done_statuses:
+                eff_remaining = min(0, diff)
+            else:
+                eff_remaining = diff
 
-            developer["logged"] += (
-                issue.logged
-            )
+            developer["remaining"] += eff_remaining
 
-            developer["remaining"] += (
-                issue.remaining
-            )
-
-            # Real effort calculation
             if issue.status in self.done_statuses:
                 projected = issue.logged
             else:
-                if issue.remaining > 0:
-                    projected = issue.logged + issue.remaining
-                else:
-                    projected = max(issue.estimate, issue.logged)
+                projected = max(issue.estimate, issue.logged)
 
             developer["real_effort"] += projected
 
@@ -267,7 +247,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    i.remaining
+                    (min(0, i.estimate - i.logged) if i.status in self.done_statuses else (i.estimate - i.logged))
                     for i in issues_with_logged_time
                 ),
 
@@ -321,7 +301,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    i.remaining
+                    (min(0, i.estimate - i.logged) if i.status in self.done_statuses else (i.estimate - i.logged))
                     for i in self.issues
                 ),
 
