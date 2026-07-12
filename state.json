@@ -2,8 +2,8 @@
     "filters": {
         "epic_link": "",
         "fix_version": "FR: Localization: Full",
-        "feature_start_date": "2026-06-15",
-        "working_hours_per_day": "7"
+        "feature_start_date": "2026-07-07",
+        "working_hours_per_day": "7.0"
     },
     "vacations": {
         "v_Беляев Владислав_1": {
@@ -46,6 +46,9 @@
             "working_hours_per_day": "7.0"
         },
         "epic:all|fix:FR: Localization: MVP (iOS)": {},
-        "epic:all|fix:FR: Localization: Full": {}
+        "epic:all|fix:FR: Localization: Full": {
+            "feature_start_date": "2026-07-07",
+            "working_hours_per_day": "7.0"
+        }
     }
 }

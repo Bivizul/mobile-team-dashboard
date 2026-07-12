@@ -6,7 +6,7 @@ class Analytics:
 
     def __init__(self, issues):
         self.issues = issues
-        self.done_statuses = ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]
+        self.done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]]
         from utils import parse_date
 
 
@@ -22,16 +22,17 @@ class Analytics:
             for i in self.issues
         )
 
-        done_statuses = ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]
-        in_progress_statuses = ["In Progress"]
+        done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]]
+        in_progress_statuses = ["in progress"]
 
         tasks_done = 0
         tasks_in_progress = 0
 
         for issue in self.issues:
-            if issue.status in done_statuses:
+            status_lower = issue.status.lower()
+            if status_lower in done_statuses:
                 tasks_done += 1
-            elif issue.status in in_progress_statuses:
+            elif status_lower in in_progress_statuses:
                 tasks_in_progress += 1
         
         tasks_total = len(self.issues)
@@ -59,7 +60,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    (min(0, i.estimate - i.logged) if i.status in self.done_statuses else (i.estimate - i.logged))
+                    (min(0, i.estimate - i.logged) if i.status.lower() in self.done_statuses else (i.estimate - i.logged))
                     for i in self.issues
                 ),
 
@@ -97,7 +98,7 @@ class Analytics:
 
             # Logic: Show negative if exceeded. For Done tasks, don't show positive remaining.
             diff = issue.estimate - issue.logged
-            if issue.status in self.done_statuses:
+            if issue.status.lower() in self.done_statuses:
                 eff_remaining = min(0, diff)
             else:
                 eff_remaining = diff
@@ -105,7 +106,7 @@ class Analytics:
             developer["remaining"] += eff_remaining
 
             # Real effort: spent time for done, max(estimate, logged) for others
-            if issue.status in self.done_statuses:
+            if issue.status.lower() in self.done_statuses:
                 projected = issue.logged
             else:
                 projected = max(issue.estimate, issue.logged)
@@ -168,14 +169,14 @@ class Analytics:
             developer["logged"] += issue.logged
 
             diff = issue.estimate - issue.logged
-            if issue.status in self.done_statuses:
+            if issue.status.lower() in self.done_statuses:
                 eff_remaining = min(0, diff)
             else:
                 eff_remaining = diff
 
             developer["remaining"] += eff_remaining
 
-            if issue.status in self.done_statuses:
+            if issue.status.lower() in self.done_statuses:
                 projected = issue.logged
             else:
                 projected = max(issue.estimate, issue.logged)
@@ -249,7 +250,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    (min(0, i.estimate - i.logged) if i.status in self.done_statuses else (i.estimate - i.logged))
+                    (min(0, i.estimate - i.logged) if i.status.lower() in self.done_statuses else (i.estimate - i.logged))
                     for i in issues_with_logged_time
                 ),
 
@@ -269,6 +270,14 @@ class Analytics:
         return [
             issue for issue in self.issues
             if issue.logged > issue.estimate
+        ]
+
+    def new_tasks_list(self):
+        # Exclude active/ready/done statuses from "New" (backlog) view
+        excluded_statuses = self.done_statuses + ["in progress", "to do", "blocked"]
+        return [
+            issue for issue in self.issues
+            if issue.status.lower() not in excluded_statuses
         ]
     
     def totals(self, developers_data=None):
@@ -303,7 +312,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    (min(0, i.estimate - i.logged) if i.status in self.done_statuses else (i.estimate - i.logged))
+                    (min(0, i.estimate - i.logged) if i.status.lower() in self.done_statuses else (i.estimate - i.logged))
                     for i in self.issues
                 ),
 

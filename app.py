@@ -63,7 +63,7 @@ def index():
     # Filter out "Reject" tasks with zero logged time
     issues = [
         i for i in issues
-        if not (i.status == "Reject" and i.logged == 0)
+        if not (i.status.lower() == "reject" and i.logged == 0)
     ]
 
     analytics = Analytics(
@@ -165,6 +165,9 @@ def index():
 
         issues=
             analytics.task_list(),
+
+        new_tasks=
+            analytics.new_tasks_list(),
 
         hrbox_absences=
             filtered_absences,
