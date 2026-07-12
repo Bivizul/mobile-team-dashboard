@@ -54,11 +54,6 @@ def index():
         working_hours = 8.0
     working_hours = max(1.0, working_hours)
 
-    developer_estimates = [data["estimate"] for data in analytics.developers().values()]
-    largest_developer_estimate = max(developer_estimates) if developer_estimates else 0
-    largest_developer_estimate_hours = largest_developer_estimate / 3600
-    deadline_date = calculate_feature_deadline(start_date, largest_developer_estimate_hours, working_hours)
-
     br547_issue_data = jira.get_issue_time_data(BR547_ISSUE_KEY)
     br547_worklogs = br547_issue_data.get("worklogs", [])
 

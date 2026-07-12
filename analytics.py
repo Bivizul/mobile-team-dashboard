@@ -6,6 +6,7 @@ class Analytics:
 
     def __init__(self, issues):
         self.issues = issues
+        self.done_statuses = ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]
         from utils import parse_date
 
 
@@ -83,11 +84,10 @@ class Analytics:
                 "br547_logged": 0,
                 "remaining":0,
                 "efficiency": 0,
-                "real_effort": 0 # Time spent for done tasks, estimate for others
+                "real_effort": 0 # Projected total time: logged + remaining for tasks + br547
             }
         )
 
-        done_statuses = ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]
 
         for issue in self.issues:
 
@@ -110,10 +110,16 @@ class Analytics:
                 issue.remaining
             )
 
-            if issue.status in done_statuses:
-                developer["real_effort"] += issue.logged
+            # Real effort calculation
+            if issue.status in self.done_statuses:
+                projected = issue.logged
             else:
-                developer["real_effort"] += issue.estimate
+                if issue.remaining > 0:
+                    projected = issue.logged + issue.remaining
+                else:
+                    projected = max(issue.estimate, issue.logged)
+
+            developer["real_effort"] += projected
 
         if br547_worklogs:
             from utils import parse_date
@@ -128,7 +134,9 @@ class Analytics:
                         # (i.e., they belong to the current mobile team scope/filter)
                         for existing_name in result.keys():
                             if existing_name.lower() == author_name.lower():
-                                result[existing_name]["br547_logged"] += worklog.get("timeSpentSeconds", 0)
+                                time_spent = worklog.get("timeSpentSeconds", 0)
+                                result[existing_name]["br547_logged"] += time_spent
+                                result[existing_name]["real_effort"] += time_spent
                                 break
 
 
@@ -152,7 +160,8 @@ class Analytics:
                 "logged":0,
                 "br547_logged": 0,
                 "remaining":0,
-                "efficiency": 0
+                "efficiency": 0,
+                "real_effort": 0
             }
         )
 
@@ -181,6 +190,17 @@ class Analytics:
                 issue.remaining
             )
 
+            # Real effort calculation
+            if issue.status in self.done_statuses:
+                projected = issue.logged
+            else:
+                if issue.remaining > 0:
+                    projected = issue.logged + issue.remaining
+                else:
+                    projected = max(issue.estimate, issue.logged)
+
+            developer["real_effort"] += projected
+
         if br547_worklogs:
             from utils import parse_date
             for worklog in br547_worklogs:
@@ -192,11 +212,11 @@ class Analytics:
                     if not feature_start_date or (worklog_started and worklog_started >= feature_start_date):
                         # For this table, we ONLY count time for developers who already have logged time
                         # on tasks from the filter.
-                        found = False
                         for existing_name in list(result.keys()):
                             if existing_name.lower() == author_name.lower():
-                                result[existing_name]["br547_logged"] += worklog.get("timeSpentSeconds", 0)
-                                found = True
+                                time_spent = worklog.get("timeSpentSeconds", 0)
+                                result[existing_name]["br547_logged"] += time_spent
+                                result[existing_name]["real_effort"] += time_spent
                                 break
 
                         # We don't add new developers to this specific table if they only have BR-547 time
