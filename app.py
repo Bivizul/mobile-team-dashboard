@@ -60,6 +60,12 @@ def index():
         fix_version=fix_version,
     )
 
+    # Filter out "Reject" tasks with zero logged time
+    issues = [
+        i for i in issues
+        if not (i.status == "Reject" and i.logged == 0)
+    ]
+
     analytics = Analytics(
         issues
     )
@@ -194,10 +200,10 @@ def index():
             real_delivery_date.strftime("%Y-%m-%d") if real_delivery_date else "",
 
         feature_deadline_hint=
-            f"Based on the largest developer estimate ({largest_developer_estimate_hours:.1f} h) and {working_hours:.1f} working hours/day",
+            f"Target completion based on initial estimates ({largest_developer_estimate_hours:.1f} h) at {working_hours:.1f} h/day capacity.",
 
         real_delivery_hint=
-            f"Based on real effort: spent for done tasks, estimate for others ({largest_developer_real_effort_hours:.1f} h)",
+            f"Forecasted completion based on: actual time spent on 'Done' tasks, current estimate (or spent if higher) for others, and meeting overhead since feature start ({largest_developer_real_effort_hours:.1f} h total effort).",
 
         working_hours_per_day=
             working_hours,

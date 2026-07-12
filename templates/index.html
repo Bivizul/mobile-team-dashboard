@@ -188,7 +188,7 @@ Developers
     </label>
     <label>
         <span>Real delivery date</span>
-        <input type="date" name="real_delivery_date" value="{{ real_delivery_date }}" autocomplete="off" readonly title="{{ real_delivery_hint }}">
+        <input type="date" name="real_delivery_date" value="{{ real_delivery_date }}" autocomplete="off" readonly>
     </label>
     <label>
         <span>Working hours/day</span>
@@ -197,7 +197,8 @@ Developers
     <button type="submit">Apply</button>
 </form>
 
-<p class="feature-planning-hint">{{ feature_deadline_hint }}</p>
+<p class="feature-planning-hint"><strong>Deadline:</strong> {{ feature_deadline_hint }}</p>
+<p class="feature-planning-hint"><strong>Forecast:</strong> {{ real_delivery_hint }}</p>
 
 <table data-default-sort-column="developer">
 

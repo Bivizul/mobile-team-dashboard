@@ -120,7 +120,8 @@ class Analytics:
                 if author_name:
                     author_name = author_name.strip()
                     worklog_started = parse_date(worklog.get("started"))
-                    if not feature_start_date or (worklog_started and worklog_started >= feature_start_date):
+                    # Only count meetings if we have a feature start date AND the meeting happened after it
+                    if feature_start_date and worklog_started and worklog_started >= feature_start_date:
                         # Only add time to developers who are already in the results
                         # (i.e., they belong to the current mobile team scope/filter)
                         for existing_name in result.keys():
@@ -189,7 +190,8 @@ class Analytics:
                 if author_name:
                     author_name = author_name.strip()
                     worklog_started = parse_date(worklog.get("started"))
-                    if not feature_start_date or (worklog_started and worklog_started >= feature_start_date):
+                    # Only count meetings if we have a feature start date AND the meeting happened after it
+                    if feature_start_date and worklog_started and worklog_started >= feature_start_date:
                         # For this table, we ONLY count time for developers who already have logged time
                         # on tasks from the filter.
                         for existing_name in list(result.keys()):

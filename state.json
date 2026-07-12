@@ -2,8 +2,8 @@
     "filters": {
         "epic_link": "",
         "fix_version": "FR: Donate 2.0",
-        "feature_start_date": "2026-05-30",
-        "working_hours_per_day": "7.0"
+        "feature_start_date": "2026-06-15",
+        "working_hours_per_day": "7"
     },
     "vacations": {
         "v_Беляев Владислав_1": {
@@ -39,7 +39,7 @@
     "scoped_data": {
         "epic:all|fix:FR: Donate 2.0": {
             "feature_start_date": "2026-06-15",
-            "working_hours_per_day": "7.0"
+            "working_hours_per_day": "7"
         },
         "epic:all|fix:CTR: vol. 1.9": {
             "feature_start_date": "2026-05-30",
