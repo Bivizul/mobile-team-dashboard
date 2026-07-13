@@ -25,24 +25,26 @@ class JiraClient:
         self.base_url = config.JIRA_URL
         self.done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject", "Closed", "Resolved"]]
 
-
-    def get_filter_jql(self):
-
+    def get_jql_by_filter_id(self, filter_id):
+        if not filter_id:
+            return ""
         url = (
             f"{self.base_url}"
             f"/rest/api/2/filter/"
-            f"{config.JIRA_FILTER_ID}"
+            f"{filter_id}"
         )
-
-        response = self.session.get(url)
-        response.raise_for_status()
-
-        return response.json()["jql"]
-
+        try:
+            response = self.session.get(url)
+            response.raise_for_status()
+            return response.json().get("jql", "")
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching JQL for filter {filter_id}: {e}")
+            return ""
 
     def get_filter_issues(self, epic_link=None, fix_version=None):
-
-        jql = self.get_filter_jql()
+        jql = self.get_jql_by_filter_id(config.JIRA_FILTER_ID)
+        if not jql:
+            return []
 
         jql = self.apply_filters(
             jql,
@@ -50,9 +52,33 @@ class JiraClient:
             fix_version=fix_version,
         )
 
-        print("Using JQL:")
+        print("Using JQL for department issues:")
         print(jql)
 
+        return self.search(jql)
+
+    def get_issues_for_feature(self, epic_link=None, fix_version=None):
+        base_jql = self.get_jql_by_filter_id(config.JIRA_COMPANY_FILTER_ID)
+        
+        if base_jql:
+             jql = self.apply_filters(
+                base_jql,
+                epic_link=epic_link,
+                fix_version=fix_version,
+            )
+        else:
+            conditions = []
+            if epic_link:
+                conditions.append(f'"Epic Link" = "{epic_link}"')
+            if fix_version:
+                conditions.append(f'fixVersion = "{fix_version}"')
+            if not conditions:
+                return []
+            jql = " AND ".join(conditions)
+
+        print("Using JQL for feature-wide issues:")
+        print(jql)
+        
         return self.search(jql)
 
 
@@ -143,7 +169,6 @@ class JiraClient:
         worklogs = worklog_data.get("worklogs", [])
         total_worklogs = worklog_data.get("total", 0)
 
-        # If there are more worklogs than returned in the initial response, fetch them all
         if total_worklogs > len(worklogs):
             url = f"{self.base_url}/rest/api/2/issue/{issue_key}/worklog"
             while len(worklogs) < total_worklogs:
@@ -194,7 +219,9 @@ class JiraClient:
 
     def get_fix_version_options(self):
 
-        jql = self.get_filter_jql()
+        jql = self.get_jql_by_filter_id(config.JIRA_FILTER_ID)
+        if not jql:
+            return []
 
         response = self.session.get(
             f"{self.base_url}/rest/api/2/search",
@@ -252,7 +279,7 @@ class JiraClient:
         )
 
         done_date = self._find_done_date(changelog)
-
+        
 
         return Issue(
 

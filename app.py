@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from collections import defaultdict
 
 from flask import Flask, render_template, request, jsonify
 
@@ -55,28 +56,51 @@ def index():
             req_working_hours
         )
 
+    # Department-specific data (for tables, cards, burn-up)
+    department_issues = jira.get_filter_issues(
+        epic_link=epic_link,
+        fix_version=fix_version,
+    )
+    department_issues = [
+        i for i in department_issues
+        if not (i.status.lower() == "reject" and i.logged == 0)
+    ]
+    department_analytics = Analytics(department_issues)
+
+    # Feature-wide data for component pie charts
+    feature_issues = jira.get_issues_for_feature(
+        epic_link=epic_link,
+        fix_version=fix_version,
+    )
+
+    # Calculate pie chart data manually
+    department_assignee_set = {issue.assignee for issue in department_issues}
+    
+    mobile_tasks = len(department_issues)
+    other_tasks = len(feature_issues) - mobile_tasks
+
+    mobile_estimate = sum(i.estimate for i in department_issues)
+    other_estimate = sum(i.estimate for i in feature_issues if i.assignee not in department_assignee_set)
+
+    pie_chart_data = {
+        "tasks_by_department": {
+            "labels": ["Mobile Department", "Other Departments"],
+            "values": [mobile_tasks, other_tasks]
+        },
+        "estimate_by_department": {
+            "labels": ["Mobile Department", "Other Departments"],
+            "values": [mobile_estimate / 3600, other_estimate / 3600]
+        }
+    }
+
+
     all_department_issues = jira.get_filter_issues()
     all_department_assignees = sorted({
         issue.assignee for issue in all_department_issues
         if issue.assignee and issue.assignee != "Unassigned"
     })
 
-    issues = jira.get_filter_issues(
-        epic_link=epic_link,
-        fix_version=fix_version,
-    )
-
-    # Filter out "Reject" tasks with zero logged time
-    issues = [
-        i for i in issues
-        if not (i.status.lower() == "reject" and i.logged == 0)
-    ]
-
-    analytics = Analytics(
-        issues
-    )
-
-    assignees = sorted({issue.assignee for issue in issues if issue.assignee and issue.assignee != "Unassigned"})
+    assignees = sorted({issue.assignee for issue in department_issues if issue.assignee and issue.assignee != "Unassigned"})
     hrbox_absences = hrbox.get_team_absences()
     hrbox_status = getattr(hrbox, "last_status", "unknown")
     hrbox_error = getattr(hrbox, "last_error", None)
@@ -101,11 +125,11 @@ def index():
         if not parsed_start_date or (wl_date and wl_date >= parsed_start_date):
             br547_logged_since_start += wl.get("timeSpentSeconds", 0)
 
-    developers_data = analytics.developers(
+    developers_data = department_analytics.developers(
         br547_worklogs=br547_worklogs,
         feature_start_date=parsed_start_date,
     )
-    developers_with_logged_time_data = analytics.developers_with_logged_time(
+    developers_with_logged_time_data = department_analytics.developers_with_logged_time(
         br547_worklogs=br547_worklogs,
         feature_start_date=parsed_start_date,
     )
@@ -156,7 +180,7 @@ def index():
         "index.html",
 
         summary=
-            analytics.summary(),
+            department_analytics.summary(),
 
         developers=developers_data,
 
@@ -164,16 +188,16 @@ def index():
             developers_with_logged_time_data,
 
         totals_with_logged_time=
-            analytics.totals_with_logged_time(developers_data=developers_with_logged_time_data),
+            department_analytics.totals_with_logged_time(developers_data=developers_with_logged_time_data),
 
         totals=
-            analytics.totals(developers_data=developers_data),
+            department_analytics.totals(developers_data=developers_data),
 
         issues=
-            analytics.task_list(),
+            department_analytics.task_list(),
 
         new_tasks=
-            analytics.new_tasks_list(),
+            department_analytics.new_tasks_list(),
 
         hrbox_absences=
             filtered_absences,
@@ -233,7 +257,13 @@ def index():
             all_department_assignees,
 
         burnup_chart_data=
-            analytics.burnup_chart_data(),
+            department_analytics.burnup_chart_data(),
+        
+        pie_chart_data=
+            pie_chart_data,
+
+        mobile_status_pie_chart_data=
+            department_analytics.mobile_status_pie_chart_data(),
     )
 
 

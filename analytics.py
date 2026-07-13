@@ -360,3 +360,13 @@ class Analytics:
             "created": created_cumulative,
             "resolved": resolved_cumulative,
         }
+
+    def mobile_status_pie_chart_data(self):
+        status_counts = defaultdict(int)
+        for issue in self.issues:
+            status_counts[issue.status] += 1
+        
+        return {
+            "labels": list(status_counts.keys()),
+            "values": list(status_counts.values())
+        }

@@ -472,8 +472,19 @@ New Tasks ({{ new_tasks|length }})
 
 <div class="charts-container">
     <h2>Charts</h2>
-    <div class="chart-wrapper">
-        <canvas id="burnupChart"></canvas>
+    <div class="chart-grid">
+        <div class="chart-wrapper">
+            <canvas id="burnupChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="tasksByDepartmentChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="estimateByDepartmentChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="mobileStatusChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -784,6 +795,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // Pie Charts
+    const pieChartData = {{ pie_chart_data | tojson }};
+    const mobileStatusPieChartData = {{ mobile_status_pie_chart_data | tojson }};
+
+    function createPieChart(canvasId, data, title) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx || !data || !data.labels || data.labels.length === 0) return;
+
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    data: data.values,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 159, 64, 0.8)'
+                    ],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: title
+                    }
+                }
+            }
+        });
+    }
+
+    createPieChart('tasksByDepartmentChart', pieChartData.tasks_by_department, 'Tasks by Department');
+    createPieChart('estimateByDepartmentChart', pieChartData.estimate_by_department, 'Estimate (hours) by Department');
+    createPieChart('mobileStatusChart', mobileStatusPieChartData, 'Task Statuses (Mobile Dept)');
+
 
     document.querySelectorAll('table').forEach((table) => {
         const headers = Array.from(table.querySelectorAll('th.sortable'));

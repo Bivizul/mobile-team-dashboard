@@ -17,6 +17,7 @@ class Config:
         self.JIRA_URL = os.getenv("JIRA_URL")
         self.JIRA_TOKEN = os.getenv("JIRA_TOKEN")
         self.JIRA_FILTER_ID = os.getenv("JIRA_FILTER_ID")
+        self.JIRA_COMPANY_FILTER_ID = os.getenv("JIRA_COMPANY_FILTER_ID")
 
         self.HRBOX_BASE_URL = os.getenv("HRBOX_BASE_URL")
         self.HRBOX_API_KEY = os.getenv("HRBOX_API_KEY")
