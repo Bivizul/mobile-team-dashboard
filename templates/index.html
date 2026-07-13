@@ -804,10 +804,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx = document.getElementById(canvasId);
         if (!ctx || !data || !data.labels || data.labels.length === 0) return;
 
+        const total = data.values.reduce((a, b) => a + b, 0);
+        const labelsWithPercent = data.labels.map((label, i) => {
+            const val = data.values[i];
+            const percent = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+            return `${label}: ${val.toFixed(1)} (${percent}%)`;
+        });
+
         new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: data.labels,
+                labels: labelsWithPercent,
                 datasets: [{
                     data: data.values,
                     backgroundColor: [
