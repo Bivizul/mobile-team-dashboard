@@ -17,6 +17,10 @@ href="/static/style.css">
 
 <body>
 
+<div id="loader-overlay">
+    <div class="spinner"></div>
+</div>
+
 <div class="toolbar">
     <div class="header-main">
         <h1>Mobile Team Dashboard</h1>
@@ -918,6 +922,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return cell.dataset.sortValue ?? cell.textContent.trim();
     }
+
+    // Show loader on form submission and page reloads
+    const loader = document.getElementById('loader-overlay');
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', () => {
+            loader.classList.add('visible');
+        });
+    });
+
+    // Handle back/forward cache and initial load
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            loader.classList.remove('visible');
+        } else {
+            loader.classList.remove('visible');
+        }
+    });
+
+    // Optional: show loader on any link click that isn't a hash link or JS link
+    document.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !link.getAttribute('target')) {
+                loader.classList.add('visible');
+            }
+        });
+    });
 });
 </script>
 
