@@ -10,6 +10,7 @@ Mobile Team Dashboard
 
 <link rel="stylesheet"
 href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
@@ -469,6 +470,13 @@ New Tasks ({{ new_tasks|length }})
 </tbody>
 </table>
 
+<div class="charts-container">
+    <h2>Charts</h2>
+    <div class="chart-wrapper">
+        <canvas id="burnupChart"></canvas>
+    </div>
+</div>
+
 <h2>
 Overdue tasks ({{ issues|length }}/{{ summary.tasks }})
 </h2>
@@ -717,6 +725,63 @@ document.addEventListener('DOMContentLoaded', () => {
             .find(btn => btn.getAttribute('onclick').includes(activeTab));
         if (tabButton) {
             tabButton.click();
+        }
+    }
+
+    // Burnup Chart
+    const burnupCtx = document.getElementById('burnupChart');
+    if (burnupCtx) {
+        const burnupData = {{ burnup_chart_data | tojson }};
+        if (burnupData && burnupData.labels && burnupData.labels.length > 0) {
+            new Chart(burnupCtx, {
+                type: 'line',
+                data: {
+                    labels: burnupData.labels,
+                    datasets: [
+                        {
+                            label: 'Created Tasks',
+                            data: burnupData.created,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true,
+                            stepped: true,
+                        },
+                        {
+                            label: 'Resolved Tasks',
+                            data: burnupData.resolved,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true,
+                            stepped: true,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Tasks'
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Burn-up Chart'
+                        }
+                    }
+                }
+            });
         }
     }
 

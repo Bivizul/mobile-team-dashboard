@@ -16,3 +16,6 @@ class Issue:
     remaining: int
     jira_url: str = ""
     updated: str = ""
+    created: str = ""
+    resolution_date: str = ""
+    done_date: str = ""

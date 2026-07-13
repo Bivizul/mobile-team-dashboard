@@ -231,6 +231,9 @@ def index():
 
         all_department_assignees=
             all_department_assignees,
+
+        burnup_chart_data=
+            analytics.burnup_chart_data(),
     )
 
 

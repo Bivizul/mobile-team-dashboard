@@ -23,6 +23,7 @@ class JiraClient:
         )
 
         self.base_url = config.JIRA_URL
+        self.done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject", "Closed", "Resolved"]]
 
 
     def get_filter_jql(self):
@@ -85,6 +86,8 @@ class JiraClient:
 
             "maxResults": 100,
 
+            "expand": "changelog",
+
             "fields":
                 [
                     "summary",
@@ -92,7 +95,9 @@ class JiraClient:
                     "assignee",
                     "issuetype",
                     "timetracking",
-                    "updated"
+                    "updated",
+                    "created",
+                    "resolutiondate"
                 ]
         }
 
@@ -215,10 +220,21 @@ class JiraClient:
             key=lambda item: item["label"].lower(),
         )
 
+    def _find_done_date(self, changelog):
+        histories = changelog.get("histories", [])
+        for history in sorted(histories, key=lambda x: x.get("created")):
+            for item in history.get("items", []):
+                if item.get("field") == "status":
+                    from_status = item.get("fromString", "").lower()
+                    to_status = item.get("toString", "").lower()
+                    if from_status == "in progress" and to_status in self.done_statuses:
+                        return history.get("created")
+        return None
 
     def map_issue(self, raw):
 
         fields = raw["fields"]
+        changelog = raw.get("changelog", {})
 
 
         tracking = (
@@ -234,6 +250,8 @@ class JiraClient:
                 "assignee"
             )
         )
+
+        done_date = self._find_done_date(changelog)
 
 
         return Issue(
@@ -275,5 +293,8 @@ class JiraClient:
             jira_url=
                 f"{self.base_url}/browse/{raw['key']}",
 
-            updated=fields.get("updated", "")
+            updated=fields.get("updated", ""),
+            created=fields.get("created", ""),
+            resolution_date=fields.get("resolutiondate", ""),
+            done_date=done_date
         )

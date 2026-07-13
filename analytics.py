@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import date, timedelta
 
 
 class Analytics:
@@ -6,7 +7,7 @@ class Analytics:
 
     def __init__(self, issues):
         self.issues = issues
-        self.done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]]
+        self.done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject", "Closed", "Resolved"]]
         from utils import parse_date
 
 
@@ -312,4 +313,50 @@ class Analytics:
                 )
                 if logged
                 else 0
+        }
+
+    def burnup_chart_data(self):
+        from utils import parse_date
+        if not self.issues:
+            return {}
+
+        # Parse created and resolution dates, ignoring issues with invalid created dates
+        for issue in self.issues:
+            issue.created_date = parse_date(issue.created)
+            issue.done_date_parsed = parse_date(issue.done_date) if issue.done_date else None
+
+        issues = [issue for issue in self.issues if issue.created_date]
+        if not issues:
+            return {}
+
+        start_date = min(issue.created_date for issue in issues)
+        end_date = date.today()
+        
+        labels = []
+        created_cumulative = []
+        resolved_cumulative = []
+
+        total_created = 0
+        total_resolved = 0
+
+        for current_date in (start_date + timedelta(days=n) for n in range((end_date - start_date).days + 1)):
+            labels.append(current_date.strftime("%Y-%m-%d"))
+            
+            # Increment created count
+            for issue in issues:
+                if issue.created_date == current_date:
+                    total_created += 1
+            
+            # Increment resolved count
+            for issue in issues:
+                if issue.done_date_parsed and issue.done_date_parsed == current_date:
+                    total_resolved += 1
+            
+            created_cumulative.append(total_created)
+            resolved_cumulative.append(total_resolved)
+
+        return {
+            "labels": labels,
+            "created": created_cumulative,
+            "resolved": resolved_cumulative,
         }
