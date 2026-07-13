@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -19,3 +19,5 @@ class Issue:
     created: str = ""
     resolution_date: str = ""
     done_date: str = ""
+    components: list[str] = field(default_factory=list)
+    department: str = ""

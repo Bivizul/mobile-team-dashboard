@@ -73,23 +73,30 @@ def index():
         fix_version=fix_version,
     )
 
-    # Calculate pie chart data manually
-    department_assignee_set = {issue.assignee for issue in department_issues}
-    
-    mobile_tasks = len(department_issues)
-    other_tasks = len(feature_issues) - mobile_tasks
+    # Filter out \"Reject\" tasks with zero logged time for feature issues
+    feature_issues = [
+        i for i in feature_issues
+        if not (i.status.lower() == "reject" and i.logged == 0)
+    ]
 
-    mobile_estimate = sum(i.estimate for i in department_issues)
-    other_estimate = sum(i.estimate for i in feature_issues if i.assignee not in department_assignee_set)
+    # Calculate pie chart data by department
+    tasks_by_dept = defaultdict(int)
+    estimate_by_dept = defaultdict(float)
+
+    for issue in feature_issues:
+        # Use department field, or \"Other Departments\" if empty
+        dept_name = issue.department if issue.department else "Other Departments"
+        tasks_by_dept[dept_name] += 1
+        estimate_by_dept[dept_name] += issue.estimate / 3600
 
     pie_chart_data = {
         "tasks_by_department": {
-            "labels": ["Mobile Department", "Other Departments"],
-            "values": [mobile_tasks, other_tasks]
+            "labels": list(tasks_by_dept.keys()),
+            "values": list(tasks_by_dept.values())
         },
         "estimate_by_department": {
-            "labels": ["Mobile Department", "Other Departments"],
-            "values": [mobile_estimate / 3600, other_estimate / 3600]
+            "labels": list(estimate_by_dept.keys()),
+            "values": list(estimate_by_dept.values())
         }
     }
 

@@ -123,7 +123,9 @@ class JiraClient:
                     "timetracking",
                     "updated",
                     "created",
-                    "resolutiondate"
+                    "resolutiondate",
+                    "components",
+                    "customfield_10311"
                 ]
         }
 
@@ -278,6 +280,15 @@ class JiraClient:
             )
         )
 
+        components = [c["name"] for c in fields.get("components", [])]
+
+        dept_data = fields.get("customfield_10311")
+        department = ""
+        if isinstance(dept_data, list) and dept_data:
+            department = dept_data[0].get("name", "")
+        elif isinstance(dept_data, dict):
+            department = dept_data.get("name", "")
+
         done_date = self._find_done_date(changelog)
         
 
@@ -323,5 +334,7 @@ class JiraClient:
             updated=fields.get("updated", ""),
             created=fields.get("created", ""),
             resolution_date=fields.get("resolutiondate", ""),
-            done_date=done_date
+            done_date=done_date,
+            components=components,
+            department=department
         )
