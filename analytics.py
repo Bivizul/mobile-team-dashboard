@@ -22,7 +22,6 @@ class Analytics:
             for i in self.issues
         )
 
-        done_statuses = [s.lower() for s in ["Tech Review", "Ready To Test", "In Test", "Done", "Reject"]]
         in_progress_statuses = ["in progress"]
 
         tasks_done = 0
@@ -30,7 +29,7 @@ class Analytics:
 
         for issue in self.issues:
             status_lower = issue.status.lower()
-            if status_lower in done_statuses:
+            if status_lower in self.done_statuses:
                 tasks_done += 1
             elif status_lower in in_progress_statuses:
                 tasks_in_progress += 1
@@ -60,7 +59,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    (min(0, i.estimate - i.logged) if i.status.lower() in self.done_statuses else (i.estimate - i.logged))
+                    (i.estimate - i.logged)
                     for i in self.issues
                 ),
 
@@ -98,12 +97,7 @@ class Analytics:
 
             # Logic: Show negative if exceeded. For Done tasks, don't show positive remaining.
             diff = issue.estimate - issue.logged
-            if issue.status.lower() in self.done_statuses:
-                eff_remaining = min(0, diff)
-            else:
-                eff_remaining = diff
-
-            developer["remaining"] += eff_remaining
+            developer["remaining"] += diff
 
             # Real effort: spent time for done, max(estimate, logged) for others
             if issue.status.lower() in self.done_statuses:
@@ -169,12 +163,7 @@ class Analytics:
             developer["logged"] += issue.logged
 
             diff = issue.estimate - issue.logged
-            if issue.status.lower() in self.done_statuses:
-                eff_remaining = min(0, diff)
-            else:
-                eff_remaining = diff
-
-            developer["remaining"] += eff_remaining
+            developer["remaining"] += diff
 
             if issue.status.lower() in self.done_statuses:
                 projected = issue.logged
@@ -250,7 +239,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    (min(0, i.estimate - i.logged) if i.status.lower() in self.done_statuses else (i.estimate - i.logged))
+                    (i.estimate - i.logged)
                     for i in issues_with_logged_time
                 ),
 
@@ -312,7 +301,7 @@ class Analytics:
 
             "remaining":
                 sum(
-                    (min(0, i.estimate - i.logged) if i.status.lower() in self.done_statuses else (i.estimate - i.logged))
+                    (i.estimate - i.logged)
                     for i in self.issues
                 ),
 
