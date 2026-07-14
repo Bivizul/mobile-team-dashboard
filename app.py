@@ -89,14 +89,19 @@ def index():
         tasks_by_dept[dept_name] += 1
         estimate_by_dept[dept_name] += issue.estimate / 3600
 
+    total_tasks = sum(tasks_by_dept.values())
+    total_hours = sum(estimate_by_dept.values())
+
     pie_chart_data = {
         "tasks_by_department": {
             "labels": list(tasks_by_dept.keys()),
-            "values": list(tasks_by_dept.values())
+            "values": list(tasks_by_dept.values()),
+            "total": total_tasks
         },
         "estimate_by_department": {
             "labels": list(estimate_by_dept.keys()),
-            "values": list(estimate_by_dept.values())
+            "values": list(estimate_by_dept.values()),
+            "total": total_hours
         }
     }
 

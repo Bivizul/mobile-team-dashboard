@@ -110,7 +110,7 @@ class JiraClient:
 
             "jql": jql,
 
-            "maxResults": 1000,
+            "maxResults": 500,
 
             "expand": "changelog",
 
@@ -178,7 +178,7 @@ class JiraClient:
                     url,
                     params={
                         "startAt": len(worklogs),
-                        "maxResults": 1000,
+                        "maxResults": 500,
                     },
                 )
                 response.raise_for_status()
@@ -200,7 +200,7 @@ class JiraClient:
             f"{self.base_url}/rest/api/2/search",
             params={
                 "jql": "issuetype = Epic",
-                "maxResults": 1000,
+                "maxResults": 500,
                 "fields": ["summary", "key"],
             },
         )
@@ -229,7 +229,7 @@ class JiraClient:
             f"{self.base_url}/rest/api/2/search",
             params={
                 "jql": jql,
-                "maxResults": 1000,
+                "maxResults": 500,
                 "fields": ["fixVersions"],
             },
         )

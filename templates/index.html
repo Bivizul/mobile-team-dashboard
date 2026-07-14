@@ -844,8 +844,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    createPieChart('tasksByDepartmentChart', pieChartData.tasks_by_department, 'Tasks by Department');
-    createPieChart('estimateByDepartmentChart', pieChartData.estimate_by_department, 'Estimate (hours) by Department');
+    createPieChart('tasksByDepartmentChart', pieChartData.tasks_by_department, `Tasks by Department (Total: ${pieChartData.tasks_by_department.total})`);
+    createPieChart('estimateByDepartmentChart', pieChartData.estimate_by_department, `Estimate (hours) by Department (Total: ${pieChartData.estimate_by_department.total.toFixed(1)}h)`);
     createPieChart('mobileStatusChart', mobileStatusPieChartData, 'Task Statuses (Mobile Dept)');
 
 
