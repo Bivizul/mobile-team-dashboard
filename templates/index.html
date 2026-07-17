@@ -476,10 +476,10 @@ New Tasks ({{ new_tasks|length }})
 
 <div class="charts-container">
     <h2>Charts</h2>
+    <div class="chart-wrapper chart-wrapper-full">
+        <canvas id="burnupChart"></canvas>
+    </div>
     <div class="chart-grid">
-        <div class="chart-wrapper">
-            <canvas id="burnupChart"></canvas>
-        </div>
         <div class="chart-wrapper">
             <canvas id="tasksByDepartmentChart"></canvas>
         </div>
@@ -542,7 +542,7 @@ Efficiency
 <a href="{{ issue.jira_url }}" target="_blank" rel="noopener noreferrer">{{issue.key}}</a>
 </td>
 
-<td data-column="assignee" data-sort-value="{{ issue.assignee }}">
+<td data--sort-value="{{ issue.assignee }}">
 {{issue.assignee}}
 </td>
 

@@ -422,3 +422,8 @@ tr:hover {
     border-radius: 12px;
     box-sizing: border-box;
 }
+
+.chart-wrapper-full {
+    grid-column: 1 / -1;
+    margin-bottom: 20px;
+}
