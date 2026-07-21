@@ -80,6 +80,7 @@ class Analytics:
         result = defaultdict(
             lambda:{
                 "tasks":0,
+                "tasks_resolved":0,
                 "estimate":0,
                 "logged":0,
                 "br547_logged": 0,
@@ -95,6 +96,9 @@ class Analytics:
             developer["tasks"] += 1
             developer["estimate"] += issue.estimate
             developer["logged"] += issue.logged
+
+            if issue.status.lower() in self.done_statuses:
+                developer["tasks_resolved"] += 1
 
             # Logic: Show negative if exceeded. For Done tasks, don't show positive remaining.
             diff = issue.estimate - issue.logged
@@ -282,6 +286,8 @@ class Analytics:
             for i in self.issues
         )
 
+        tasks_resolved = sum(1 for i in self.issues if i.status.lower() in self.done_statuses)
+
         br547_logged = 0
         if developers_data:
             br547_logged = sum(d.get("br547_logged", 0) for d in developers_data.values())
@@ -290,6 +296,9 @@ class Analytics:
 
             "tasks":
                 len(self.issues),
+
+            "tasks_resolved":
+                tasks_resolved,
 
             "estimate":
                 estimate,

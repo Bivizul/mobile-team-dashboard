@@ -235,6 +235,10 @@ Logged
 Remaining
 </th>
 
+<th class="sortable" data-column="progress">
+Progress
+</th>
+
 <th class="sortable" data-column="br547_logged">
 Meets since feature start
 </th>
@@ -256,6 +260,11 @@ Meets since feature start
 <td data-column="logged" data-sort-value="{{ data.logged }}">{{data.logged | hours}} h</td>
 
 <td data-column="remaining" data-sort-value="{{ data.remaining }}">{{data.remaining | hours}} h</td>
+
+<td data-column="progress" data-sort-value="{{ (data.tasks_resolved / data.tasks * 100) if data.tasks > 0 else 0 }}">
+    {{ data.tasks_resolved }}/{{ data.tasks }}
+    ({{ "%.0f"|format((data.tasks_resolved / data.tasks * 100)) if data.tasks > 0 else 0 }}%)
+</td>
 
 <td data-column="br547_logged" data-sort-value="{{ data.br547_logged }}">{{data.br547_logged | hours}} h</td>
 
@@ -300,6 +309,13 @@ TOTAL
 <strong>
 {{totals.remaining | hours}} h
 </strong>
+</td>
+
+<td>
+    <strong>
+    {{ totals.tasks_resolved }}/{{ totals.tasks }}
+    ({{ "%.0f"|format((totals.tasks_resolved / totals.tasks * 100)) if totals.tasks > 0 else 0 }}%)
+    </strong>
 </td>
 
 <td>
